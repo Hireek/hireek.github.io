@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Spring源码浅析、事务 | Like风的小屋</title>
+    <meta name="generator" content="VuePress 1.9.7">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="description" content="今夜，风依然掠过星星">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    
+    <link rel="preload" href="/assets/css/0.styles.bdefc583.css" as="style"><link rel="preload" href="/assets/js/app.e4232f48.js" as="script"><link rel="preload" href="/assets/js/3.f4a9627b.js" as="script"><link rel="preload" href="/assets/js/1.0b3a1078.js" as="script"><link rel="preload" href="/assets/js/41.a7616ce9.js" as="script"><link rel="prefetch" href="/assets/js/10.3f6f8387.js"><link rel="prefetch" href="/assets/js/11.c8771628.js"><link rel="prefetch" href="/assets/js/12.b507dcb1.js"><link rel="prefetch" href="/assets/js/13.46470dc9.js"><link rel="prefetch" href="/assets/js/14.055a3ad7.js"><link rel="prefetch" href="/assets/js/15.02a5b2d2.js"><link rel="prefetch" href="/assets/js/16.5fe0e3ac.js"><link rel="prefetch" href="/assets/js/17.4d824475.js"><link rel="prefetch" href="/assets/js/18.746a8f26.js"><link rel="prefetch" href="/assets/js/19.db242e91.js"><link rel="prefetch" href="/assets/js/20.23f2273a.js"><link rel="prefetch" href="/assets/js/21.3806db34.js"><link rel="prefetch" href="/assets/js/22.fcdcdce3.js"><link rel="prefetch" href="/assets/js/23.91dcb77c.js"><link rel="prefetch" href="/assets/js/24.993ba5d4.js"><link rel="prefetch" href="/assets/js/25.6b5bbf1e.js"><link rel="prefetch" href="/assets/js/26.c0f73928.js"><link rel="prefetch" href="/assets/js/27.16148302.js"><link rel="prefetch" href="/assets/js/28.107af02f.js"><link rel="prefetch" href="/assets/js/29.08a4f7d7.js"><link rel="prefetch" href="/assets/js/30.6f09b6ea.js"><link rel="prefetch" href="/assets/js/31.f0de35a5.js"><link rel="prefetch" href="/assets/js/32.38c83274.js"><link rel="prefetch" href="/assets/js/33.e9dd1496.js"><link rel="prefetch" href="/assets/js/34.a69d2003.js"><link rel="prefetch" href="/assets/js/35.d02d3cb6.js"><link rel="prefetch" href="/assets/js/36.7d99b8c7.js"><link rel="prefetch" href="/assets/js/37.5ec7949e.js"><link rel="prefetch" href="/assets/js/38.017175f3.js"><link rel="prefetch" href="/assets/js/39.1f71bc6f.js"><link rel="prefetch" href="/assets/js/4.dd6c1d45.js"><link rel="prefetch" href="/assets/js/40.261ca3af.js"><link rel="prefetch" href="/assets/js/42.77db63db.js"><link rel="prefetch" href="/assets/js/43.d24a024a.js"><link rel="prefetch" href="/assets/js/44.7271dbd6.js"><link rel="prefetch" href="/assets/js/5.e37fb802.js"><link rel="prefetch" href="/assets/js/6.d01ecd6c.js"><link rel="prefetch" href="/assets/js/7.4be34a0e.js"><link rel="prefetch" href="/assets/js/8.c6933fa8.js"><link rel="prefetch" href="/assets/js/9.99813f43.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.bdefc583.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container" data-v-7dd95ae2><div data-v-7dd95ae2><div class="password-shadow password-wrapper-out" style="display:none;" data-v-59e6cb88 data-v-7dd95ae2 data-v-7dd95ae2><h3 class="title" data-v-59e6cb88>Like风的小屋</h3> <p class="description" data-v-59e6cb88>今夜，风依然掠过星星</p> <label id="box" class="inputBox" data-v-59e6cb88><input type="password" value="" data-v-59e6cb88> <span data-v-59e6cb88>Konck! Knock!</span> <button data-v-59e6cb88>OK</button></label> <div class="footer" data-v-59e6cb88><span data-v-59e6cb88><i class="iconfont reco-theme" data-v-59e6cb88></i> <a target="blank" href="https://vuepress-theme-reco.recoluan.com" data-v-59e6cb88>vuePress-theme-reco</a></span> <span data-v-59e6cb88><i class="iconfont reco-copyright" data-v-59e6cb88></i> <a data-v-59e6cb88><span data-v-59e6cb88>Hireek</span>
+          
+        <span data-v-59e6cb88>2022 - </span>
+        2023
+      </a></span></div></div> <div class="hide" data-v-7dd95ae2><header class="navbar" data-v-7dd95ae2><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-active"><img src="/logo.png" alt="Like风的小屋" class="logo"> <span class="site-name">Like风的小屋</span></a> <div class="links"><div class="color-picker"><a class="color-button"><i class="iconfont reco-color"></i></a> <div class="color-picker-menu" style="display:none;"><div class="mode-options"><h4 class="title">Choose mode</h4> <ul class="color-mode-options"><li class="dark">dark</li><li class="auto active">auto</li><li class="light">light</li></ul></div></div></div> <div class="search-box"><i class="iconfont reco-search"></i> <input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/" class="nav-link"><i class="iconfont reco-home"></i>
+  Home
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-category"></i>
+      Category
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/categories/Java并发编程之美/" class="nav-link"><i class="undefined"></i>
+  Java并发编程之美
+</a></li><li class="dropdown-item"><!----> <a href="/categories/随笔/" class="nav-link"><i class="undefined"></i>
+  随笔
+</a></li><li class="dropdown-item"><!----> <a href="/categories/今日简史/" class="nav-link"><i class="undefined"></i>
+  今日简史
+</a></li><li class="dropdown-item"><!----> <a href="/categories/心理学/" class="nav-link"><i class="undefined"></i>
+  心理学
+</a></li><li class="dropdown-item"><!----> <a href="/categories/杂记/" class="nav-link"><i class="undefined"></i>
+  杂记
+</a></li><li class="dropdown-item"><!----> <a href="/categories/散文/" class="nav-link"><i class="undefined"></i>
+  散文
+</a></li><li class="dropdown-item"><!----> <a href="/categories/哲学/" class="nav-link"><i class="undefined"></i>
+  哲学
+</a></li><li class="dropdown-item"><!----> <a href="/categories/设计模式/" class="nav-link"><i class="undefined"></i>
+  设计模式
+</a></li><li class="dropdown-item"><!----> <a href="/categories/书籍笔记/" class="nav-link"><i class="undefined"></i>
+  书籍笔记
+</a></li><li class="dropdown-item"><!----> <a href="/categories/学习/" class="nav-link"><i class="undefined"></i>
+  学习
+</a></li><li class="dropdown-item"><!----> <a href="/categories/重构/" class="nav-link"><i class="undefined"></i>
+  重构
+</a></li><li class="dropdown-item"><!----> <a href="/categories/go/" class="nav-link"><i class="undefined"></i>
+  go
+</a></li><li class="dropdown-item"><!----> <a href="/categories/spring/" class="nav-link"><i class="undefined"></i>
+  spring
+</a></li><li class="dropdown-item"><!----> <a href="/categories/vuepress/" class="nav-link"><i class="undefined"></i>
+  vuepress
+</a></li></ul></div></div><div class="nav-item"><a href="/tag/" class="nav-link"><i class="iconfont reco-tag"></i>
+  Tag
+</a></div><div class="nav-item"><a href="/timeline/" class="nav-link"><i class="iconfont reco-date"></i>
+  TimeLine
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      阅读笔记
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/书/道德经/" class="nav-link"><i class="undefined"></i>
+  道德经
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/Java并发编程之美/" class="nav-link"><i class="undefined"></i>
+  Java并发编程之美
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/心智的七种境界.html" class="nav-link"><i class="undefined"></i>
+  心智的七种境界
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/林清玄随笔.html" class="nav-link"><i class="undefined"></i>
+  林清玄随笔
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/今日简史摘录.html" class="nav-link"><i class="undefined"></i>
+  今日简史摘录
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/西方现代思想讲义/" class="nav-link"><i class="undefined"></i>
+  西方现代思想讲义
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/被讨厌的勇气/" class="nav-link"><i class="undefined"></i>
+  被讨厌的勇气
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      学习
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/学习/DDD/" class="nav-link"><i class="undefined"></i>
+  DDD
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/学习/spring/" class="nav-link"><i class="undefined"></i>
+  spring
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/学习/go/" class="nav-link"><i class="undefined"></i>
+  go
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      代码修炼
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/代码修炼/重构/" class="nav-link"><i class="undefined"></i>
+  重构
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/代码修炼/设计模式/" class="nav-link"><i class="undefined"></i>
+  设计模式
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      Contact
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/Hireek" target="_blank" rel="noopener noreferrer" class="nav-link external"><i class="iconfont reco-github"></i>
+  GitHub
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></li></ul></div></div> <!----></nav></div></header> <div class="sidebar-mask" data-v-7dd95ae2></div> <aside class="sidebar" data-v-7dd95ae2><div class="personal-info-wrapper" data-v-1fad0c41 data-v-7dd95ae2><img src="/avatar.png" alt="author-avatar" class="personal-img" data-v-1fad0c41> <h3 class="name" data-v-1fad0c41>
+    Hireek
+  </h3> <div class="num" data-v-1fad0c41><div data-v-1fad0c41><h3 data-v-1fad0c41>34</h3> <h6 data-v-1fad0c41>Articles</h6></div> <div data-v-1fad0c41><h3 data-v-1fad0c41>23</h3> <h6 data-v-1fad0c41>Tags</h6></div></div> <ul class="social-links" data-v-1fad0c41></ul> <hr data-v-1fad0c41></div> <nav class="nav-links"><div class="nav-item"><a href="/" class="nav-link"><i class="iconfont reco-home"></i>
+  Home
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-category"></i>
+      Category
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/categories/Java并发编程之美/" class="nav-link"><i class="undefined"></i>
+  Java并发编程之美
+</a></li><li class="dropdown-item"><!----> <a href="/categories/随笔/" class="nav-link"><i class="undefined"></i>
+  随笔
+</a></li><li class="dropdown-item"><!----> <a href="/categories/今日简史/" class="nav-link"><i class="undefined"></i>
+  今日简史
+</a></li><li class="dropdown-item"><!----> <a href="/categories/心理学/" class="nav-link"><i class="undefined"></i>
+  心理学
+</a></li><li class="dropdown-item"><!----> <a href="/categories/杂记/" class="nav-link"><i class="undefined"></i>
+  杂记
+</a></li><li class="dropdown-item"><!----> <a href="/categories/散文/" class="nav-link"><i class="undefined"></i>
+  散文
+</a></li><li class="dropdown-item"><!----> <a href="/categories/哲学/" class="nav-link"><i class="undefined"></i>
+  哲学
+</a></li><li class="dropdown-item"><!----> <a href="/categories/设计模式/" class="nav-link"><i class="undefined"></i>
+  设计模式
+</a></li><li class="dropdown-item"><!----> <a href="/categories/书籍笔记/" class="nav-link"><i class="undefined"></i>
+  书籍笔记
+</a></li><li class="dropdown-item"><!----> <a href="/categories/学习/" class="nav-link"><i class="undefined"></i>
+  学习
+</a></li><li class="dropdown-item"><!----> <a href="/categories/重构/" class="nav-link"><i class="undefined"></i>
+  重构
+</a></li><li class="dropdown-item"><!----> <a href="/categories/go/" class="nav-link"><i class="undefined"></i>
+  go
+</a></li><li class="dropdown-item"><!----> <a href="/categories/spring/" class="nav-link"><i class="undefined"></i>
+  spring
+</a></li><li class="dropdown-item"><!----> <a href="/categories/vuepress/" class="nav-link"><i class="undefined"></i>
+  vuepress
+</a></li></ul></div></div><div class="nav-item"><a href="/tag/" class="nav-link"><i class="iconfont reco-tag"></i>
+  Tag
+</a></div><div class="nav-item"><a href="/timeline/" class="nav-link"><i class="iconfont reco-date"></i>
+  TimeLine
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      阅读笔记
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/书/道德经/" class="nav-link"><i class="undefined"></i>
+  道德经
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/Java并发编程之美/" class="nav-link"><i class="undefined"></i>
+  Java并发编程之美
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/心智的七种境界.html" class="nav-link"><i class="undefined"></i>
+  心智的七种境界
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/林清玄随笔.html" class="nav-link"><i class="undefined"></i>
+  林清玄随笔
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/今日简史摘录.html" class="nav-link"><i class="undefined"></i>
+  今日简史摘录
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/西方现代思想讲义/" class="nav-link"><i class="undefined"></i>
+  西方现代思想讲义
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/被讨厌的勇气/" class="nav-link"><i class="undefined"></i>
+  被讨厌的勇气
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      学习
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/学习/DDD/" class="nav-link"><i class="undefined"></i>
+  DDD
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/学习/spring/" class="nav-link"><i class="undefined"></i>
+  spring
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/学习/go/" class="nav-link"><i class="undefined"></i>
+  go
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      代码修炼
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/代码修炼/重构/" class="nav-link"><i class="undefined"></i>
+  重构
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/代码修炼/设计模式/" class="nav-link"><i class="undefined"></i>
+  设计模式
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      Contact
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/Hireek" target="_blank" rel="noopener noreferrer" class="nav-link external"><i class="iconfont reco-github"></i>
+  GitHub
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></li></ul></div></div> <!----></nav> <ul class="sidebar-links"><li><a href="/blogs/%E5%AD%A6%E4%B9%A0/spring/" aria-current="page" class="sidebar-link">Spring</a></li><li><a href="/blogs/学习/spring/Spring核心、IOC.html" class="sidebar-link">Spring核心、IOC</a></li><li><a href="/blogs/学习/spring/Spring核心、DI.html" class="sidebar-link">Spring核心、DI</a></li><li><a href="/blogs/学习/spring/Spring核心、AOP.html" class="sidebar-link">Spring核心、AOP</a></li><li><a href="/blogs/学习/spring/Spring源码浅析、事务.html" class="active sidebar-link">Spring源码浅析、事务</a></li></ul> </aside> <div class="password-shadow password-wrapper-in" style="display:none;" data-v-59e6cb88 data-v-7dd95ae2><h3 class="title" data-v-59e6cb88>Spring源码浅析、事务</h3> <!----> <label id="box" class="inputBox" data-v-59e6cb88><input type="password" value="" data-v-59e6cb88> <span data-v-59e6cb88>Konck! Knock!</span> <button data-v-59e6cb88>OK</button></label> <div class="footer" data-v-59e6cb88><span data-v-59e6cb88><i class="iconfont reco-theme" data-v-59e6cb88></i> <a target="blank" href="https://vuepress-theme-reco.recoluan.com" data-v-59e6cb88>vuePress-theme-reco</a></span> <span data-v-59e6cb88><i class="iconfont reco-copyright" data-v-59e6cb88></i> <a data-v-59e6cb88><span data-v-59e6cb88>Hireek</span>
+          
+        <span data-v-59e6cb88>2022 - </span>
+        2023
+      </a></span></div></div> <div data-v-7dd95ae2><div data-v-7dd95ae2><main class="page"><section style="display:;"><div class="page-title"><h1 class="title">Spring源码浅析、事务</h1> <div data-v-8a445198><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>Hireek</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>2/16/2022</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>spring</span><span class="tag-item" data-v-8a445198>AOP</span></i></div></div> <div class="theme-reco-content content__default"><h1 id="spring源码浅析-事务"><a href="#spring源码浅析-事务" class="header-anchor">#</a> Spring源码浅析——事务</h1> <p>​</p> <p>基于AOP（动态代理）</p> <p>只解析声明式（注解方式）</p> <h2 id="enabletransactionmanagement"><a href="#enabletransactionmanagement" class="header-anchor">#</a> @EnableTransactionManagement</h2> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token annotation punctuation">@Target</span><span class="token punctuation">(</span><span class="token class-name">ElementType</span><span class="token punctuation">.</span><span class="token constant">TYPE</span><span class="token punctuation">)</span>
+<span class="token annotation punctuation">@Retention</span><span class="token punctuation">(</span><span class="token class-name">RetentionPolicy</span><span class="token punctuation">.</span><span class="token constant">RUNTIME</span><span class="token punctuation">)</span>
+<span class="token annotation punctuation">@Documented</span>
+<span class="token annotation punctuation">@Import</span><span class="token punctuation">(</span><span class="token class-name">TransactionManagementConfigurationSelector</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token annotation punctuation">@interface</span> <span class="token class-name">EnableTransactionManagement</span> <span class="token punctuation">{</span>
+
+  <span class="token keyword">boolean</span> <span class="token function">proxyTargetClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">default</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+
+  <span class="token class-name">AdviceMode</span> <span class="token function">mode</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">default</span> <span class="token class-name">AdviceMode</span><span class="token punctuation">.</span><span class="token constant">PROXY</span><span class="token punctuation">;</span>
+
+  <span class="token keyword">int</span> <span class="token function">order</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">default</span> <span class="token class-name">Ordered</span><span class="token punctuation">.</span><span class="token constant">LOWEST_PRECEDENCE</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br></div></div><h2 id="transactionmanagementconfigurationselector"><a href="#transactionmanagementconfigurationselector" class="header-anchor">#</a> TransactionManagementConfigurationSelector</h2> <p>默认的jdk代理，加载AutoProxyRegistrar、ProxyTransactionManagementConfiguration这两个类。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">TransactionManagementConfigurationSelector</span> <span class="token keyword">extends</span> <span class="token class-name">AdviceModeImportSelector</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">EnableTransactionManagement</span><span class="token punctuation">&gt;</span></span> <span class="token punctuation">{</span>
+
+  <span class="token annotation punctuation">@Override</span>
+  <span class="token keyword">protected</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token function">selectImports</span><span class="token punctuation">(</span><span class="token class-name">AdviceMode</span> adviceMode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">switch</span> <span class="token punctuation">(</span>adviceMode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">case</span> <span class="token constant">PROXY</span><span class="token operator">:</span> <span class="token comment">// 默认</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token punctuation">{</span><span class="token class-name">AutoProxyRegistrar</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                             <span class="token class-name">ProxyTransactionManagementConfiguration</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+      <span class="token keyword">case</span> <span class="token constant">ASPECTJ</span><span class="token operator">:</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token punctuation">{</span><span class="token function">determineTransactionAspectClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+      <span class="token keyword">default</span><span class="token operator">:</span>
+        <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">private</span> <span class="token class-name">String</span> <span class="token function">determineTransactionAspectClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token punctuation">(</span><span class="token class-name">ClassUtils</span><span class="token punctuation">.</span><span class="token function">isPresent</span><span class="token punctuation">(</span><span class="token string">&quot;javax.transaction.Transactional&quot;</span><span class="token punctuation">,</span> <span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getClassLoader</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">?</span>
+            <span class="token class-name">TransactionManagementConfigUtils</span><span class="token punctuation">.</span><span class="token constant">JTA_TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME</span> <span class="token operator">:</span>
+            <span class="token class-name">TransactionManagementConfigUtils</span><span class="token punctuation">.</span><span class="token constant">TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br></div></div><h2 id="autoproxyregistrar"><a href="#autoproxyregistrar" class="header-anchor">#</a> AutoProxyRegistrar</h2> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">AutoProxyRegistrar</span> <span class="token keyword">implements</span> <span class="token class-name">ImportBeanDefinitionRegistrar</span> <span class="token punctuation">{</span>
+
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Log</span> logger <span class="token operator">=</span> <span class="token class-name">LogFactory</span><span class="token punctuation">.</span><span class="token function">getLog</span><span class="token punctuation">(</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token annotation punctuation">@Override</span>
+  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">registerBeanDefinitions</span><span class="token punctuation">(</span><span class="token class-name">AnnotationMetadata</span> importingClassMetadata<span class="token punctuation">,</span> <span class="token class-name">BeanDefinitionRegistry</span> registry<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">boolean</span> candidateFound <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token class-name">Set</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">&gt;</span></span> annTypes <span class="token operator">=</span> importingClassMetadata<span class="token punctuation">.</span><span class="token function">getAnnotationTypes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">String</span> annType <span class="token operator">:</span> annTypes<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token class-name">AnnotationAttributes</span> candidate <span class="token operator">=</span> <span class="token class-name">AnnotationConfigUtils</span><span class="token punctuation">.</span><span class="token function">attributesFor</span><span class="token punctuation">(</span>importingClassMetadata<span class="token punctuation">,</span> annType<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>candidate <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">continue</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span>
+      <span class="token class-name">Object</span> mode <span class="token operator">=</span> candidate<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">&quot;mode&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token class-name">Object</span> proxyTargetClass <span class="token operator">=</span> candidate<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">&quot;proxyTargetClass&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>mode <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> proxyTargetClass <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> <span class="token class-name">AdviceMode</span><span class="token punctuation">.</span><span class="token keyword">class</span> <span class="token operator">==</span> mode<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span>
+          <span class="token class-name">Boolean</span><span class="token punctuation">.</span><span class="token keyword">class</span> <span class="token operator">==</span> proxyTargetClass<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        candidateFound <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>mode <span class="token operator">==</span> <span class="token class-name">AdviceMode</span><span class="token punctuation">.</span><span class="token constant">PROXY</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+          <span class="token class-name">AopConfigUtils</span><span class="token punctuation">.</span><span class="token function">registerAutoProxyCreatorIfNecessary</span><span class="token punctuation">(</span>registry<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 导入InfrastructureAdvisorAutoProxyCreator后置处理器</span>
+          <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token class-name">Boolean</span><span class="token punctuation">)</span> proxyTargetClass<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token class-name">AopConfigUtils</span><span class="token punctuation">.</span><span class="token function">forceAutoProxyCreatorToUseClassProxying</span><span class="token punctuation">(</span>registry<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+          <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">BeanDefinition</span> <span class="token function">registerAutoProxyCreatorIfNecessary</span><span class="token punctuation">(</span>
+  <span class="token class-name">BeanDefinitionRegistry</span> registry<span class="token punctuation">,</span> <span class="token annotation punctuation">@Nullable</span> <span class="token class-name">Object</span> source<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> <span class="token function">registerOrEscalateApcAsRequired</span><span class="token punctuation">(</span><span class="token class-name">InfrastructureAdvisorAutoProxyCreator</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> registry<span class="token punctuation">,</span> source<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br></div></div><p>AutoProxyRegistrar的作用跟AOP中的AnnotationAwareAspectJAutoProxyCreator是一样的，方法initializeBean，利用后置处理器机制在对象创建以后，包装对象，返回一个代理对象（增强器），代理对象执行方法利用拦截器链进行调用；InfrastructureAdvisorAutoProxyCreator继承SmartInstantiationAwareBeanPostProcessor，跟AOP的原理是一样的，也是通过@Transactional作为方法拦截的标记，把有事务管理的类作为目标类，生成代理对象，然后增强@Transactional标记的方法，在使用目标方法的时候，从IOC容器中获取的其实是被增强的代理类，且事务方法会被代理，跟AOP原理一样的；</p> <h2 id="proxytransactionmanagementconfiguration"><a href="#proxytransactionmanagementconfiguration" class="header-anchor">#</a> ProxyTransactionManagementConfiguration</h2> <p>ProxyTransactionManagementConfiguration是一个配置类，想IOC容器中导入事务增强器(BeanFactoryTransactionAttributeSourceAdvisor)，事务注解@Transactional的解析器(AnnotationTransactionAttributeSource)和事务方法拦截器(TransactionInterceptor)；</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token annotation punctuation">@Configuration</span><span class="token punctuation">(</span>proxyBeanMethods <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span>
+<span class="token annotation punctuation">@Role</span><span class="token punctuation">(</span><span class="token class-name">BeanDefinition</span><span class="token punctuation">.</span><span class="token constant">ROLE_INFRASTRUCTURE</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ProxyTransactionManagementConfiguration</span> <span class="token keyword">extends</span> <span class="token class-name">AbstractTransactionManagementConfiguration</span> <span class="token punctuation">{</span>
+
+   <span class="token annotation punctuation">@Bean</span><span class="token punctuation">(</span>name <span class="token operator">=</span> <span class="token class-name">TransactionManagementConfigUtils</span><span class="token punctuation">.</span><span class="token constant">TRANSACTION_ADVISOR_BEAN_NAME</span><span class="token punctuation">)</span>
+   <span class="token annotation punctuation">@Role</span><span class="token punctuation">(</span><span class="token class-name">BeanDefinition</span><span class="token punctuation">.</span><span class="token constant">ROLE_INFRASTRUCTURE</span><span class="token punctuation">)</span>
+   <span class="token keyword">public</span> <span class="token class-name">BeanFactoryTransactionAttributeSourceAdvisor</span> <span class="token function">transactionAdvisor</span><span class="token punctuation">(</span>
+         <span class="token class-name">TransactionAttributeSource</span> transactionAttributeSource<span class="token punctuation">,</span> <span class="token class-name">TransactionInterceptor</span> transactionInterceptor<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+      <span class="token class-name">BeanFactoryTransactionAttributeSourceAdvisor</span> advisor <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BeanFactoryTransactionAttributeSourceAdvisor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      advisor<span class="token punctuation">.</span><span class="token function">setTransactionAttributeSource</span><span class="token punctuation">(</span>transactionAttributeSource<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      advisor<span class="token punctuation">.</span><span class="token function">setAdvice</span><span class="token punctuation">(</span>transactionInterceptor<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>enableTx <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         advisor<span class="token punctuation">.</span><span class="token function">setOrder</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>enableTx<span class="token punctuation">.</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Integer</span><span class="token punctuation">&gt;</span></span><span class="token function">getNumber</span><span class="token punctuation">(</span><span class="token string">&quot;order&quot;</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span>
+      <span class="token keyword">return</span> advisor<span class="token punctuation">;</span>
+   <span class="token punctuation">}</span>
+
+   <span class="token annotation punctuation">@Bean</span>
+   <span class="token annotation punctuation">@Role</span><span class="token punctuation">(</span><span class="token class-name">BeanDefinition</span><span class="token punctuation">.</span><span class="token constant">ROLE_INFRASTRUCTURE</span><span class="token punctuation">)</span>
+   <span class="token keyword">public</span> <span class="token class-name">TransactionAttributeSource</span> <span class="token function">transactionAttributeSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">AnnotationTransactionAttributeSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+   <span class="token punctuation">}</span>
+
+   <span class="token annotation punctuation">@Bean</span>
+   <span class="token annotation punctuation">@Role</span><span class="token punctuation">(</span><span class="token class-name">BeanDefinition</span><span class="token punctuation">.</span><span class="token constant">ROLE_INFRASTRUCTURE</span><span class="token punctuation">)</span>
+   <span class="token keyword">public</span> <span class="token class-name">TransactionInterceptor</span> <span class="token function">transactionInterceptor</span><span class="token punctuation">(</span><span class="token class-name">TransactionAttributeSource</span> transactionAttributeSource<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token class-name">TransactionInterceptor</span> interceptor <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TransactionInterceptor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      interceptor<span class="token punctuation">.</span><span class="token function">setTransactionAttributeSource</span><span class="token punctuation">(</span>transactionAttributeSource<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>txManager <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         interceptor<span class="token punctuation">.</span><span class="token function">setTransactionManager</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>txManager<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span>
+      <span class="token keyword">return</span> interceptor<span class="token punctuation">;</span>
+   <span class="token punctuation">}</span>
+
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br></div></div><ul><li><p>给容器中注册事务增强器transactionAdvisor；</p></li> <li><p>事务增强器要用事务注解的信息，AnnotationTransactionAttributeSource解析事务注解</p></li> <li><p>事务拦截器transactionInterceptor：</p></li></ul> <p>TransactionInterceptor；保存了事务属性信息，事务管理器；</p> <p>TransactionInterceptor是一个 MethodInterceptor；</p> <p>在目标方法执行的时候；</p> <p>执行拦截器链；</p> <p>有事务拦截器：</p> <ul><li><p>先获取事务相关的属性</p></li> <li><p>再获取PlatformTransactionManager，如果事先没有添加指定任何transactionmanger 最终会从容器中按照类型获取一个PlatformTransactionManager；</p></li> <li><p>执行目标方法，如果异常，获取到事务管理器，利用事务管理回滚操作；如果正常，利用事务管理器，提交事务。</p></li></ul> <p>参考：https://www.yisu.com/zixun/608233.html</p></div></section> <footer class="page-edit"><!----> <!----></footer> <div class="page-nav"><p class="inner"><span class="prev"><a href="/blogs/学习/spring/Spring核心、AOP.html" class="prev">
+          Spring核心、AOP
+        </a></span> <!----></p></div> <div class="comments-wrapper"><!----></div></main></div> <!----></div> <ul class="sub-sidebar sub-sidebar-wrapper" style="width:12rem;" data-v-b57cc07c data-v-7dd95ae2><li class="level-2" data-v-b57cc07c><a href="/blogs/%E5%AD%A6%E4%B9%A0/spring/Spring%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%E3%80%81%E4%BA%8B%E5%8A%A1.html#enabletransactionmanagement" class="sidebar-link reco-side-enabletransactionmanagement" data-v-b57cc07c>@EnableTransactionManagement</a></li><li class="level-2" data-v-b57cc07c><a href="/blogs/%E5%AD%A6%E4%B9%A0/spring/Spring%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%E3%80%81%E4%BA%8B%E5%8A%A1.html#transactionmanagementconfigurationselector" class="sidebar-link reco-side-transactionmanagementconfigurationselector" data-v-b57cc07c>TransactionManagementConfigurationSelector</a></li><li class="level-2" data-v-b57cc07c><a href="/blogs/%E5%AD%A6%E4%B9%A0/spring/Spring%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%E3%80%81%E4%BA%8B%E5%8A%A1.html#autoproxyregistrar" class="sidebar-link reco-side-autoproxyregistrar" data-v-b57cc07c>AutoProxyRegistrar</a></li><li class="level-2" data-v-b57cc07c><a href="/blogs/%E5%AD%A6%E4%B9%A0/spring/Spring%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90%E3%80%81%E4%BA%8B%E5%8A%A1.html#proxytransactionmanagementconfiguration" class="sidebar-link reco-side-proxytransactionmanagementconfiguration" data-v-b57cc07c>ProxyTransactionManagementConfiguration</a></li></ul></div></div></div><div class="global-ui"><div class="back-to-ceiling" style="right:1rem;bottom:6rem;width:2.5rem;height:2.5rem;border-radius:.25rem;line-height:2.5rem;display:none;" data-v-c6073ba8 data-v-c6073ba8><svg t="1574745035067" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5404" class="icon" data-v-c6073ba8><path d="M526.60727968 10.90185116a27.675 27.675 0 0 0-29.21455937 0c-131.36607665 82.28402758-218.69155461 228.01873535-218.69155402 394.07834331a462.20625001 462.20625001 0 0 0 5.36959153 69.94390903c1.00431239 6.55289093-0.34802892 13.13561351-3.76865779 18.80351572-32.63518765 54.11355614-51.75690182 118.55860487-51.7569018 187.94566865a371.06718723 371.06718723 0 0 0 11.50484808 91.98906777c6.53300375 25.50556257 41.68394495 28.14064038 52.69160883 4.22606766 17.37162448-37.73630017 42.14135425-72.50938081 72.80769204-103.21549295 2.18761121 3.04276886 4.15646224 6.24463696 6.40373557 9.22774369a1871.4375 1871.4375 0 0 0 140.04691725 5.34970492 1866.36093723 1866.36093723 0 0 0 140.04691723-5.34970492c2.24727335-2.98310674 4.21612437-6.18497483 6.3937923-9.2178004 30.66633723 30.70611158 55.4360664 65.4791928 72.80769147 103.21549355 11.00766384 23.91457269 46.15860503 21.27949489 52.69160879-4.22606768a371.15156223 371.15156223 0 0 0 11.514792-91.99901164c0-69.36717486-19.13165746-133.82216804-51.75690182-187.92578088-3.42062944-5.66790279-4.76302748-12.26056868-3.76865837-18.80351632a462.20625001 462.20625001 0 0 0 5.36959269-69.943909c-0.00994388-166.08943902-87.32547796-311.81420293-218.6915546-394.09823051zM605.93803103 357.87693858a93.93749974 93.93749974 0 1 1-187.89594924 6.1e-7 93.93749974 93.93749974 0 0 1 187.89594924-6.1e-7z" p-id="5405" data-v-c6073ba8></path><path d="M429.50777625 765.63860547C429.50777625 803.39355007 466.44236686 1000.39046097 512.00932183 1000.39046097c45.56695499 0 82.4922232-197.00623328 82.5015456-234.7518555 0-37.75494459-36.9345906-68.35043303-82.4922232-68.34111062-45.57627738-0.00932239-82.52019037 30.59548842-82.51086798 68.34111062z" p-id="5406" data-v-c6073ba8></path></svg></div></div></div>
+    <script src="/assets/js/app.e4232f48.js" defer></script><script src="/assets/js/3.f4a9627b.js" defer></script><script src="/assets/js/1.0b3a1078.js" defer></script><script src="/assets/js/41.a7616ce9.js" defer></script>
+  </body>
+</html>

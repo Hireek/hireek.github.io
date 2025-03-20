@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Java并发包中锁原理剖析 | Like风的小屋</title>
+    <meta name="generator" content="VuePress 1.9.7">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="description" content="今夜，风依然掠过星星">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    
+    <link rel="preload" href="/assets/css/0.styles.bdefc583.css" as="style"><link rel="preload" href="/assets/js/app.e4232f48.js" as="script"><link rel="preload" href="/assets/js/3.f4a9627b.js" as="script"><link rel="preload" href="/assets/js/1.0b3a1078.js" as="script"><link rel="preload" href="/assets/js/16.5fe0e3ac.js" as="script"><link rel="prefetch" href="/assets/js/10.3f6f8387.js"><link rel="prefetch" href="/assets/js/11.c8771628.js"><link rel="prefetch" href="/assets/js/12.b507dcb1.js"><link rel="prefetch" href="/assets/js/13.46470dc9.js"><link rel="prefetch" href="/assets/js/14.055a3ad7.js"><link rel="prefetch" href="/assets/js/15.02a5b2d2.js"><link rel="prefetch" href="/assets/js/17.4d824475.js"><link rel="prefetch" href="/assets/js/18.746a8f26.js"><link rel="prefetch" href="/assets/js/19.db242e91.js"><link rel="prefetch" href="/assets/js/20.23f2273a.js"><link rel="prefetch" href="/assets/js/21.3806db34.js"><link rel="prefetch" href="/assets/js/22.fcdcdce3.js"><link rel="prefetch" href="/assets/js/23.91dcb77c.js"><link rel="prefetch" href="/assets/js/24.993ba5d4.js"><link rel="prefetch" href="/assets/js/25.6b5bbf1e.js"><link rel="prefetch" href="/assets/js/26.c0f73928.js"><link rel="prefetch" href="/assets/js/27.16148302.js"><link rel="prefetch" href="/assets/js/28.107af02f.js"><link rel="prefetch" href="/assets/js/29.08a4f7d7.js"><link rel="prefetch" href="/assets/js/30.6f09b6ea.js"><link rel="prefetch" href="/assets/js/31.f0de35a5.js"><link rel="prefetch" href="/assets/js/32.38c83274.js"><link rel="prefetch" href="/assets/js/33.e9dd1496.js"><link rel="prefetch" href="/assets/js/34.a69d2003.js"><link rel="prefetch" href="/assets/js/35.d02d3cb6.js"><link rel="prefetch" href="/assets/js/36.7d99b8c7.js"><link rel="prefetch" href="/assets/js/37.5ec7949e.js"><link rel="prefetch" href="/assets/js/38.017175f3.js"><link rel="prefetch" href="/assets/js/39.1f71bc6f.js"><link rel="prefetch" href="/assets/js/4.dd6c1d45.js"><link rel="prefetch" href="/assets/js/40.261ca3af.js"><link rel="prefetch" href="/assets/js/41.a7616ce9.js"><link rel="prefetch" href="/assets/js/42.77db63db.js"><link rel="prefetch" href="/assets/js/43.d24a024a.js"><link rel="prefetch" href="/assets/js/44.7271dbd6.js"><link rel="prefetch" href="/assets/js/5.e37fb802.js"><link rel="prefetch" href="/assets/js/6.d01ecd6c.js"><link rel="prefetch" href="/assets/js/7.4be34a0e.js"><link rel="prefetch" href="/assets/js/8.c6933fa8.js"><link rel="prefetch" href="/assets/js/9.99813f43.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.bdefc583.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container" data-v-7dd95ae2><div data-v-7dd95ae2><div class="password-shadow password-wrapper-out" style="display:none;" data-v-59e6cb88 data-v-7dd95ae2 data-v-7dd95ae2><h3 class="title" data-v-59e6cb88>Like风的小屋</h3> <p class="description" data-v-59e6cb88>今夜，风依然掠过星星</p> <label id="box" class="inputBox" data-v-59e6cb88><input type="password" value="" data-v-59e6cb88> <span data-v-59e6cb88>Konck! Knock!</span> <button data-v-59e6cb88>OK</button></label> <div class="footer" data-v-59e6cb88><span data-v-59e6cb88><i class="iconfont reco-theme" data-v-59e6cb88></i> <a target="blank" href="https://vuepress-theme-reco.recoluan.com" data-v-59e6cb88>vuePress-theme-reco</a></span> <span data-v-59e6cb88><i class="iconfont reco-copyright" data-v-59e6cb88></i> <a data-v-59e6cb88><span data-v-59e6cb88>Hireek</span>
+          
+        <span data-v-59e6cb88>2022 - </span>
+        2023
+      </a></span></div></div> <div class="hide" data-v-7dd95ae2><header class="navbar" data-v-7dd95ae2><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-active"><img src="/logo.png" alt="Like风的小屋" class="logo"> <span class="site-name">Like风的小屋</span></a> <div class="links"><div class="color-picker"><a class="color-button"><i class="iconfont reco-color"></i></a> <div class="color-picker-menu" style="display:none;"><div class="mode-options"><h4 class="title">Choose mode</h4> <ul class="color-mode-options"><li class="dark">dark</li><li class="auto active">auto</li><li class="light">light</li></ul></div></div></div> <div class="search-box"><i class="iconfont reco-search"></i> <input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/" class="nav-link"><i class="iconfont reco-home"></i>
+  Home
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-category"></i>
+      Category
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/categories/Java并发编程之美/" class="nav-link"><i class="undefined"></i>
+  Java并发编程之美
+</a></li><li class="dropdown-item"><!----> <a href="/categories/随笔/" class="nav-link"><i class="undefined"></i>
+  随笔
+</a></li><li class="dropdown-item"><!----> <a href="/categories/今日简史/" class="nav-link"><i class="undefined"></i>
+  今日简史
+</a></li><li class="dropdown-item"><!----> <a href="/categories/心理学/" class="nav-link"><i class="undefined"></i>
+  心理学
+</a></li><li class="dropdown-item"><!----> <a href="/categories/杂记/" class="nav-link"><i class="undefined"></i>
+  杂记
+</a></li><li class="dropdown-item"><!----> <a href="/categories/散文/" class="nav-link"><i class="undefined"></i>
+  散文
+</a></li><li class="dropdown-item"><!----> <a href="/categories/哲学/" class="nav-link"><i class="undefined"></i>
+  哲学
+</a></li><li class="dropdown-item"><!----> <a href="/categories/设计模式/" class="nav-link"><i class="undefined"></i>
+  设计模式
+</a></li><li class="dropdown-item"><!----> <a href="/categories/书籍笔记/" class="nav-link"><i class="undefined"></i>
+  书籍笔记
+</a></li><li class="dropdown-item"><!----> <a href="/categories/学习/" class="nav-link"><i class="undefined"></i>
+  学习
+</a></li><li class="dropdown-item"><!----> <a href="/categories/重构/" class="nav-link"><i class="undefined"></i>
+  重构
+</a></li><li class="dropdown-item"><!----> <a href="/categories/go/" class="nav-link"><i class="undefined"></i>
+  go
+</a></li><li class="dropdown-item"><!----> <a href="/categories/spring/" class="nav-link"><i class="undefined"></i>
+  spring
+</a></li><li class="dropdown-item"><!----> <a href="/categories/vuepress/" class="nav-link"><i class="undefined"></i>
+  vuepress
+</a></li></ul></div></div><div class="nav-item"><a href="/tag/" class="nav-link"><i class="iconfont reco-tag"></i>
+  Tag
+</a></div><div class="nav-item"><a href="/timeline/" class="nav-link"><i class="iconfont reco-date"></i>
+  TimeLine
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      阅读笔记
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/书/道德经/" class="nav-link"><i class="undefined"></i>
+  道德经
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/Java并发编程之美/" class="nav-link"><i class="undefined"></i>
+  Java并发编程之美
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/心智的七种境界.html" class="nav-link"><i class="undefined"></i>
+  心智的七种境界
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/林清玄随笔.html" class="nav-link"><i class="undefined"></i>
+  林清玄随笔
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/今日简史摘录.html" class="nav-link"><i class="undefined"></i>
+  今日简史摘录
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/西方现代思想讲义/" class="nav-link"><i class="undefined"></i>
+  西方现代思想讲义
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/被讨厌的勇气/" class="nav-link"><i class="undefined"></i>
+  被讨厌的勇气
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      学习
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/学习/DDD/" class="nav-link"><i class="undefined"></i>
+  DDD
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/学习/spring/" class="nav-link"><i class="undefined"></i>
+  spring
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/学习/go/" class="nav-link"><i class="undefined"></i>
+  go
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      代码修炼
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/代码修炼/重构/" class="nav-link"><i class="undefined"></i>
+  重构
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/代码修炼/设计模式/" class="nav-link"><i class="undefined"></i>
+  设计模式
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      Contact
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/Hireek" target="_blank" rel="noopener noreferrer" class="nav-link external"><i class="iconfont reco-github"></i>
+  GitHub
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></li></ul></div></div> <!----></nav></div></header> <div class="sidebar-mask" data-v-7dd95ae2></div> <aside class="sidebar" data-v-7dd95ae2><div class="personal-info-wrapper" data-v-1fad0c41 data-v-7dd95ae2><img src="/avatar.png" alt="author-avatar" class="personal-img" data-v-1fad0c41> <h3 class="name" data-v-1fad0c41>
+    Hireek
+  </h3> <div class="num" data-v-1fad0c41><div data-v-1fad0c41><h3 data-v-1fad0c41>34</h3> <h6 data-v-1fad0c41>Articles</h6></div> <div data-v-1fad0c41><h3 data-v-1fad0c41>23</h3> <h6 data-v-1fad0c41>Tags</h6></div></div> <ul class="social-links" data-v-1fad0c41></ul> <hr data-v-1fad0c41></div> <nav class="nav-links"><div class="nav-item"><a href="/" class="nav-link"><i class="iconfont reco-home"></i>
+  Home
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-category"></i>
+      Category
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/categories/Java并发编程之美/" class="nav-link"><i class="undefined"></i>
+  Java并发编程之美
+</a></li><li class="dropdown-item"><!----> <a href="/categories/随笔/" class="nav-link"><i class="undefined"></i>
+  随笔
+</a></li><li class="dropdown-item"><!----> <a href="/categories/今日简史/" class="nav-link"><i class="undefined"></i>
+  今日简史
+</a></li><li class="dropdown-item"><!----> <a href="/categories/心理学/" class="nav-link"><i class="undefined"></i>
+  心理学
+</a></li><li class="dropdown-item"><!----> <a href="/categories/杂记/" class="nav-link"><i class="undefined"></i>
+  杂记
+</a></li><li class="dropdown-item"><!----> <a href="/categories/散文/" class="nav-link"><i class="undefined"></i>
+  散文
+</a></li><li class="dropdown-item"><!----> <a href="/categories/哲学/" class="nav-link"><i class="undefined"></i>
+  哲学
+</a></li><li class="dropdown-item"><!----> <a href="/categories/设计模式/" class="nav-link"><i class="undefined"></i>
+  设计模式
+</a></li><li class="dropdown-item"><!----> <a href="/categories/书籍笔记/" class="nav-link"><i class="undefined"></i>
+  书籍笔记
+</a></li><li class="dropdown-item"><!----> <a href="/categories/学习/" class="nav-link"><i class="undefined"></i>
+  学习
+</a></li><li class="dropdown-item"><!----> <a href="/categories/重构/" class="nav-link"><i class="undefined"></i>
+  重构
+</a></li><li class="dropdown-item"><!----> <a href="/categories/go/" class="nav-link"><i class="undefined"></i>
+  go
+</a></li><li class="dropdown-item"><!----> <a href="/categories/spring/" class="nav-link"><i class="undefined"></i>
+  spring
+</a></li><li class="dropdown-item"><!----> <a href="/categories/vuepress/" class="nav-link"><i class="undefined"></i>
+  vuepress
+</a></li></ul></div></div><div class="nav-item"><a href="/tag/" class="nav-link"><i class="iconfont reco-tag"></i>
+  Tag
+</a></div><div class="nav-item"><a href="/timeline/" class="nav-link"><i class="iconfont reco-date"></i>
+  TimeLine
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      阅读笔记
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/书/道德经/" class="nav-link"><i class="undefined"></i>
+  道德经
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/Java并发编程之美/" class="nav-link"><i class="undefined"></i>
+  Java并发编程之美
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/心智的七种境界.html" class="nav-link"><i class="undefined"></i>
+  心智的七种境界
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/林清玄随笔.html" class="nav-link"><i class="undefined"></i>
+  林清玄随笔
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/今日简史摘录.html" class="nav-link"><i class="undefined"></i>
+  今日简史摘录
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/西方现代思想讲义/" class="nav-link"><i class="undefined"></i>
+  西方现代思想讲义
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/书/被讨厌的勇气/" class="nav-link"><i class="undefined"></i>
+  被讨厌的勇气
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      学习
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/学习/DDD/" class="nav-link"><i class="undefined"></i>
+  DDD
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/学习/spring/" class="nav-link"><i class="undefined"></i>
+  spring
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/学习/go/" class="nav-link"><i class="undefined"></i>
+  go
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      代码修炼
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/blogs/代码修炼/重构/" class="nav-link"><i class="undefined"></i>
+  重构
+</a></li><li class="dropdown-item"><!----> <a href="/blogs/代码修炼/设计模式/" class="nav-link"><i class="undefined"></i>
+  设计模式
+</a></li></ul></div></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-message"></i>
+      Contact
+    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/Hireek" target="_blank" rel="noopener noreferrer" class="nav-link external"><i class="iconfont reco-github"></i>
+  GitHub
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></li></ul></div></div> <!----></nav> <ul class="sidebar-links"><li><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/" aria-current="page" class="sidebar-link">Java并发编程之美</a></li><li><a href="/blogs/书/Java并发编程之美/Java并发编程基础.html" class="sidebar-link">Java并发编程基础</a></li><li><a href="/blogs/书/Java并发编程之美/并发编程的其他知识.html" class="sidebar-link">并发编程的其他知识</a></li><li><a href="/blogs/书/Java并发编程之美/Java并发包中ThreadLocalRandom类原理剖析.html" class="sidebar-link">Java并发包中ThreadLocalRandom类原理剖析</a></li><li><a href="/blogs/书/Java并发编程之美/Java并发包中原子操作类原理剖析.html" class="sidebar-link">Java并发包中原子操作类原理剖析</a></li><li><a href="/blogs/书/Java并发编程之美/Java并发包中并发List（CopyOnWriteArrayList）源码剖析.html" class="sidebar-link">Java并发包中并发List（CopyOnWriteArrayList）源码剖析</a></li><li><a href="/blogs/书/Java并发编程之美/Java并发包中锁原理剖析.html" class="active sidebar-link">Java并发包中锁原理剖析</a></li><li><a href="/blogs/书/Java并发编程之美/Java并发包中线程池ThreadPoolExecutor原理探究.html" class="sidebar-link">Java并发包中线程池ThreadPoolExecutor原理探究</a></li></ul> </aside> <div class="password-shadow password-wrapper-in" style="display:none;" data-v-59e6cb88 data-v-7dd95ae2><h3 class="title" data-v-59e6cb88>Java并发包中锁原理剖析</h3> <!----> <label id="box" class="inputBox" data-v-59e6cb88><input type="password" value="" data-v-59e6cb88> <span data-v-59e6cb88>Konck! Knock!</span> <button data-v-59e6cb88>OK</button></label> <div class="footer" data-v-59e6cb88><span data-v-59e6cb88><i class="iconfont reco-theme" data-v-59e6cb88></i> <a target="blank" href="https://vuepress-theme-reco.recoluan.com" data-v-59e6cb88>vuePress-theme-reco</a></span> <span data-v-59e6cb88><i class="iconfont reco-copyright" data-v-59e6cb88></i> <a data-v-59e6cb88><span data-v-59e6cb88>Hireek</span>
+          
+        <span data-v-59e6cb88>2022 - </span>
+        2023
+      </a></span></div></div> <div data-v-7dd95ae2><div data-v-7dd95ae2><main class="page"><section style="display:;"><div class="page-title"><h1 class="title">Java并发包中锁原理剖析</h1> <div data-v-8a445198><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>Hireek</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>12/31/2021</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>并发</span><span class="tag-item" data-v-8a445198>aqs</span></i></div></div> <div class="theme-reco-content content__default"><h2 id="locksupport-工具类"><a href="#locksupport-工具类" class="header-anchor">#</a> LockSupport 工具类</h2> <p>JDK 中的 rt.jar 包里面的是个 LockSupport 是个工具类，它的主要作用是挂起和唤醒线程，该工具类是创建锁和其他同步类的基础。</p> <p>LockSupport 类与每个使用它的线程都会关联一个许可证，在默认情况下调用 LockSupport 类的方法的线程是不持有许可证的。LockSupport 是使用 Unsafe 类实现的，下面介绍 LockSupport 中的几个主要函数。</p> <h3 id="void-park"><a href="#void-park" class="header-anchor">#</a> void park()</h3> <p>如果调用park方法的线程已经拿到了与LockSupport关联的许可证，则调用LockSupport.park()时会马上返回，否则调用线程会被禁止参与线程的调度，也就是会被阻塞挂起。</p> <p>如下代码直接在main函数里面调用park方法，最终只会输出begin park!，然后当前线程被挂起，这是因为在默认情况下调用线程是不持有许可证的。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;begin park! &quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;end park! &quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><p>在其他线程调用unpark(Thread thread)方法并且将当前线程作为参数时，调用park方法而被阻塞的线程会返回。另外，如果其他线程调用了阻塞线程的interrupt()方法，设置了中断标志或者被虚假唤醒，则阻塞线程也会返回。所以调用park方法时最好也使用循环条件判断方式。</p> <p>需要注意的是，因调用park()方法而被阻塞的线程被其他线程中断而返回时并不会抛出InterruptedException异常。</p> <h3 id="void-unpark-thread-thread-方法"><a href="#void-unpark-thread-thread-方法" class="header-anchor">#</a> void unpark(Thread thread) 方法</h3> <p>当一个线程调用unpark时，如果参数thread线程没有持有thread与LockSupport类关联的许可证，则让thread线程持有。如果thread之前因调用park()而被挂起，则调用unpark后，该线程会被唤醒。如果thread之前没有调用park，则调用unpark方法后，再调用park方法，则会立即返回。修改代码如下。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;begin park! &quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    
+    <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">unpark</span><span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    
+    <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;end park! &quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">/*
+  	输出结果:
+		begin park! 
+		end park! 
+  */</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br></div></div><p>下面再来看一个例子以加深对 park 和 unpark 的理解</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token class-name">Thread</span> thread <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Thread</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Runnable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;child thread begin park!&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            
+            <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;child thread unpark!&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    thread<span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;main thread begin unpark!&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    
+    <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">unpark</span><span class="token punctuation">(</span>thread<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  
+  <span class="token comment">/*
+  	输出结果
+  	child thread begin park!
+		main thread begin unpark!
+		child thread unpark!
+  */</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br></div></div><p>上边代码执行过程如下:</p> <ol><li>首先创建了一个子线程 thread，然后子线程启动调用 park 方法，由于默认情况下子线程没有持有许可证，因而会把自己挂起。</li> <li>主线程休眠 1s 是为了让主线程调用 unpark 方法前让子线程输出 child thread begin park! 并阻塞。</li> <li>主线程执行 unpark 方法，参数为创建的子线程 thread，这样做的目的是让子线程持有许可证，然后子线程调用 park 方法就返回了。</li></ol> <p><strong>park 方法返回时不会告诉你因何种原因返回，所以调用者需要根据之前调用 park 方法的原因，再次检查条件是否满足，如果不满足还需再次调用 park 方法。</strong></p> <p>例如，根据调用前后中断状态的对比就可以判断是不是因为被中断才返回的。</p> <p>为了说明调用 park 方法后的线程被中断后会返回，我们修改上面的例子代码，删除 LockSupport.unpark(thread)，然后添加 thread.interrupt()，具体代码如下。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	   <span class="token class-name">Thread</span> thread <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Thread</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Runnable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token annotation punctuation">@Override</span>
+            <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;child thread begin park!&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isInterrupted</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+                    
+                    <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span>
+
+                <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;child thread unpark!&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        thread<span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">&quot;main thread begin unpark!&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        
+        thread<span class="token punctuation">.</span><span class="token function">interrupt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">/*
+  	输出结果
+  	child thread begin park!
+		main thread begin unpark!
+		child thread unpark!
+  */</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br></div></div><p>在如上代码中，只有中断子线程，子线程才会运行结束，如果子线程不被中断，即使调用 unpark(thread) 方法子线程也不会结束。</p> <h3 id="void-parknanos-long-nanos-方法"><a href="#void-parknanos-long-nanos-方法" class="header-anchor">#</a> void parkNanos(long nanos) 方法</h3> <p>和 park 方法类似，如果调用 park 方法的线程已经拿到了与 LockSupport 关联的许可证，则调用 LockSupport.parkNanos(Long nanos) 方法后会马上返回。该方法的不同在于，如果没有拿到许可证，则调用线程会被挂起 nanos 时间后修改为自动返回。</p> <h3 id="void-park-object-blocker"><a href="#void-park-object-blocker" class="header-anchor">#</a> void park(Object blocker)</h3> <p>park 方法还支持带有 blocker 参数的方法 void park(Object blocker) 方法，当线程在没有持有许可证的情况下调用 park 方法而被阻塞挂起时，这个 blocker 对象会被记录到该线程内部。</p> <p>使用诊断工具可以观察线程被阻塞的原因，诊断工具是通过调用 getBlocker(Thread) 方法来获取 blocker 对象的，所以 JDK 推荐我们使用带有 blocker 参数的 park 方法，并且 blocker 被设置为 this，这样当在打印线程堆栈排查问题时就能知道是哪个类被阻塞了。</p> <p>例如下面的代码。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * 描述
+ *
+ * @author Hireek
+ * @date 2021/12/31 07:51
+ */</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">TestPark</span> <span class="token punctuation">{</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">testPark</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">TestPark</span> testPark <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TestPark</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        testPark<span class="token punctuation">.</span><span class="token function">testPark</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br></div></div><p>运行代码后，使用 jps 查看运行进程号，然后通过 jstack 命令查看线程堆栈时可以啊看到如下输出结果。
+<img src="https://img-blog.csdnimg.cn/48765a2dc6294b9e889ef93278b118ec.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBASGlyZWVr,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p> <p>修改代码 (1) 为 LockSupport.park(this) 后运行代码，则使用 jstack 命令输出结果为:</p> <p><img src="https://img-blog.csdnimg.cn/327a89218cb64186aa1d3c64afdc30df.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBASGlyZWVr,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p> <p>使用带 blocker 参数的 park 方法，线程堆栈可以提供更多有关阻塞对象的信息。</p> <p>接下来看看内部实现</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">park</span><span class="token punctuation">(</span><span class="token class-name">Object</span> blocker<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    
+    <span class="token class-name">Thread</span> t <span class="token operator">=</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    
+    <span class="token function">setBlocker</span><span class="token punctuation">(</span>t<span class="token punctuation">,</span> blocker<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    
+    <span class="token constant">UNSAFE</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">,</span> <span class="token number">0L</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    
+    <span class="token function">setBlocker</span><span class="token punctuation">(</span>t<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br></div></div><p>Thread 类里面有个变量 volatile Object parkBlocker，用来存放 park 方法传递的 blocker 对象，也就是把 blocker 变量存放到了调用 park 方法的线程的成员变量里面。</p> <h3 id="void-parknanos-object-blocker-long-nanos"><a href="#void-parknanos-object-blocker-long-nanos" class="header-anchor">#</a> void parkNanos(Object blocker, long nanos)</h3> <p>相比于 park(Object blocker) 方法多了个超时时间。</p> <h3 id="void-parkutil-object-blocker-long-deadline"><a href="#void-parkutil-object-blocker-long-deadline" class="header-anchor">#</a> void parkUtil(Object blocker, long deadline)</h3> <p>它的代码如下:</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">parkUntil</span><span class="token punctuation">(</span><span class="token class-name">Object</span> blocker<span class="token punctuation">,</span> <span class="token keyword">long</span> deadline<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token class-name">Thread</span> t <span class="token operator">=</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">setBlocker</span><span class="token punctuation">(</span>t<span class="token punctuation">,</span> blocker<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token constant">UNSAFE</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">,</span> deadline<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">setBlocker</span><span class="token punctuation">(</span>t<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br></div></div><p>其中参数 deadline 的时间单位为 ms，改时间是从 1970 年到现在某一时间点的毫秒值。这个方法和 park(Object blocker, long nanos) 方法的区别是，后则会是从当前算等待 nanos 秒时间，而前者是指定一个时间点，比如需要等到 2019.11.11 日 11:11:11, 则把这个时间点转化为从 1970 年到这个时间点的总毫秒数。</p> <h3 id="最后再看一个例子"><a href="#最后再看一个例子" class="header-anchor">#</a> 最后再看一个例子</h3> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">Queue</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>concurrent<span class="token punctuation">.</span></span><span class="token class-name">ConcurrentLinkedDeque</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>concurrent<span class="token punctuation">.</span>atomic<span class="token punctuation">.</span></span><span class="token class-name">AtomicBoolean</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>concurrent<span class="token punctuation">.</span>locks<span class="token punctuation">.</span></span><span class="token class-name">LockSupport</span></span><span class="token punctuation">;</span>
+
+<span class="token comment">/**
+ * 描述
+ *
+ * @author Hireek
+ * @date 2021/12/31 07:57
+ */</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">FIFOMutex</span> <span class="token punctuation">{</span>
+    
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">AtomicBoolean</span> locked <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">AtomicBoolean</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Queue</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Thread</span><span class="token punctuation">&gt;</span></span> waiters <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ConcurrentLinkedDeque</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">&gt;</span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">boolean</span> wasInterrupted <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token class-name">Thread</span> current <span class="token operator">=</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        waiters<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>current<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>waiters<span class="token punctuation">.</span><span class="token function">peek</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> current <span class="token operator">||</span> <span class="token operator">!</span>locked<span class="token punctuation">.</span><span class="token function">compareAndSet</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">interrupted</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                wasInterrupted <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+
+        waiters<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>wasInterrupted<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            current<span class="token punctuation">.</span><span class="token function">interrupt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        locked<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">unpark</span><span class="token punctuation">(</span>waiters<span class="token punctuation">.</span><span class="token function">peek</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br></div></div><p>这是一个先进先出的锁，也就是只有队列的首元素可以获取锁。在代码 (1) 处，如果当前线程不是队首或者当前锁已经被其他线程获取，则调用 park 方法挂起自己。</p> <p>然后在代码 (2) 处判断，如果 park 方法是因为被中断而返回，则忽略中断，并且重置中断标志，做个标记，然后再次判断当前线程是不是队首元素或者当前锁是否已经被其他线程获取，如果是则继续调用 park 方法挂起自己。</p> <p>然后再代码 (3) 中，判断标记，如果标记为true则中断该线程，这个怎么理解呢？其实就是其他线程中断了该线程，虽然我对中断信号不感兴趣，忽略它，但是不代表其他线程对该标志不感兴趣，所以要恢复下。</p> <hr> <p><strong>上述都是原文，为了加深下使用和理解。下面我们探讨下cpp源码</strong></p> <h2 id="hotspot底层实现"><a href="#hotspot底层实现" class="header-anchor">#</a> hotspot底层实现</h2> <h3 id="unsafe-park"><a href="#unsafe-park" class="header-anchor">#</a> Unsafe_Park</h3> <p>jdk12-&gt;os_posix.cpp文件</p> <div class="language-c++ line-numbers-mode"><pre class="language-text"><code>UNSAFE_ENTRY(void, Unsafe_Park(JNIEnv *env, jobject unsafe, jboolean isAbsolute, jlong time)) {
+  HOTSPOT_THREAD_PARK_BEGIN((uintptr_t) thread-&gt;parker(), (int) isAbsolute, time);
+  EventThreadPark event;
+
+  JavaThreadParkedState jtps(thread, time != 0);
+  thread-&gt;parker()-&gt;park(isAbsolute != 0, time);
+  if (event.should_commit()) {
+    const oop obj = thread-&gt;current_park_blocker();
+    if (time == 0) {
+      post_thread_park_event(&amp;event, obj, min_jlong, min_jlong);
+    } else {
+      if (isAbsolute != 0) {
+        post_thread_park_event(&amp;event, obj, min_jlong, time);
+      } else {
+        post_thread_park_event(&amp;event, obj, time, min_jlong);
+      }
+    }
+  }
+  HOTSPOT_THREAD_PARK_END((uintptr_t) thread-&gt;parker());
+} UNSAFE_END
+  
+  // 每个线程都有一个Parker类型的_parker变量。最终park()在Parker实现
+void Parker::park(bool isAbsolute, jlong time) {
+  
+  // Optional fast-path check:
+  // Return immediately if a permit is available.
+  // We depend on Atomic::xchg() having full barrier semantics
+  // since we are doing a lock-free update to _counter.
+  if (Atomic::xchg(0, &amp;_counter) &gt; 0) return;
+
+  Thread* thread = Thread::current();
+  assert(thread-&gt;is_Java_thread(), &quot;Must be JavaThread&quot;);
+  JavaThread *jt = (JavaThread *)thread;
+
+  // Optional optimization -- avoid state transitions if there's
+  // an interrupt pending.
+  if (Thread::is_interrupted(thread, false)) {
+    return;
+  }
+
+  // Next, demultiplex/decode time arguments
+  struct timespec absTime;
+  if (time &lt; 0 || (isAbsolute &amp;&amp; time == 0)) { // don't wait at all
+    return;
+  }
+  if (time &gt; 0) {
+    to_abstime(&amp;absTime, time, isAbsolute);
+  }
+
+  // Enter safepoint region
+  // Beware of deadlocks such as 6317397.
+  // The per-thread Parker:: mutex is a classic leaf-lock.
+  // In particular a thread must never block on the Threads_lock while
+  // holding the Parker:: mutex.  If safepoints are pending both the
+  // the ThreadBlockInVM() CTOR and DTOR may grab Threads_lock.
+  ThreadBlockInVM tbivm(jt);
+
+  // Don't wait if cannot get lock since interference arises from
+  // unparking. Also re-check interrupt before trying wait.
+  if (Thread::is_interrupted(thread, false) ||
+      pthread_mutex_trylock(_mutex) != 0) {  // 锁住信号量
+    return;
+  }
+
+  int status;
+  if (_counter &gt; 0)  { // no wait needed
+    _counter = 0;
+    status = pthread_mutex_unlock(_mutex);
+    assert_status(status == 0, status, &quot;invariant&quot;);
+    // Paranoia to ensure our locked and lock-free paths interact
+    // correctly with each other and Java-level accesses.
+    OrderAccess::fence();
+    return;
+  }
+
+  OSThreadWaitState osts(thread-&gt;osthread(), false /* not Object.wait() */);
+  jt-&gt;set_suspend_equivalent();
+  // cleared by handle_special_suspend_equivalent_condition() or java_suspend_self()
+
+  assert(_cur_index == -1, &quot;invariant&quot;);
+  if (time == 0) {
+    _cur_index = REL_INDEX; // arbitrary choice when not timed
+    status = pthread_cond_wait(&amp;_cond[_cur_index], _mutex);  //释放信号量，并在条件变量上等待
+    assert_status(status == 0, status, &quot;cond_timedwait&quot;);
+  }
+  else {
+    _cur_index = isAbsolute ? ABS_INDEX : REL_INDEX;
+    status = pthread_cond_timedwait(&amp;_cond[_cur_index], _mutex, &amp;absTime);
+    assert_status(status == 0 || status == ETIMEDOUT,
+                  status, &quot;cond_timedwait&quot;);
+  }
+  _cur_index = -1;
+
+  _counter = 0;
+  status = pthread_mutex_unlock(_mutex); // 释放信号量
+  assert_status(status == 0, status, &quot;invariant&quot;);
+  // Paranoia to ensure our locked and lock-free paths interact
+  // correctly with each other and Java-level accesses.
+  OrderAccess::fence();
+
+  // If externally suspended while waiting, re-suspend
+  if (jt-&gt;handle_special_suspend_equivalent_condition()) {
+    jt-&gt;java_suspend_self();
+  }
+} 
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br><span class="line-number">42</span><br><span class="line-number">43</span><br><span class="line-number">44</span><br><span class="line-number">45</span><br><span class="line-number">46</span><br><span class="line-number">47</span><br><span class="line-number">48</span><br><span class="line-number">49</span><br><span class="line-number">50</span><br><span class="line-number">51</span><br><span class="line-number">52</span><br><span class="line-number">53</span><br><span class="line-number">54</span><br><span class="line-number">55</span><br><span class="line-number">56</span><br><span class="line-number">57</span><br><span class="line-number">58</span><br><span class="line-number">59</span><br><span class="line-number">60</span><br><span class="line-number">61</span><br><span class="line-number">62</span><br><span class="line-number">63</span><br><span class="line-number">64</span><br><span class="line-number">65</span><br><span class="line-number">66</span><br><span class="line-number">67</span><br><span class="line-number">68</span><br><span class="line-number">69</span><br><span class="line-number">70</span><br><span class="line-number">71</span><br><span class="line-number">72</span><br><span class="line-number">73</span><br><span class="line-number">74</span><br><span class="line-number">75</span><br><span class="line-number">76</span><br><span class="line-number">77</span><br><span class="line-number">78</span><br><span class="line-number">79</span><br><span class="line-number">80</span><br><span class="line-number">81</span><br><span class="line-number">82</span><br><span class="line-number">83</span><br><span class="line-number">84</span><br><span class="line-number">85</span><br><span class="line-number">86</span><br><span class="line-number">87</span><br><span class="line-number">88</span><br><span class="line-number">89</span><br><span class="line-number">90</span><br><span class="line-number">91</span><br><span class="line-number">92</span><br><span class="line-number">93</span><br><span class="line-number">94</span><br><span class="line-number">95</span><br><span class="line-number">96</span><br><span class="line-number">97</span><br><span class="line-number">98</span><br><span class="line-number">99</span><br><span class="line-number">100</span><br><span class="line-number">101</span><br><span class="line-number">102</span><br><span class="line-number">103</span><br><span class="line-number">104</span><br><span class="line-number">105</span><br></div></div><h3 id="unsafe-unpark"><a href="#unsafe-unpark" class="header-anchor">#</a> Unsafe_Unpark</h3> <div class="language-c++ line-numbers-mode"><pre class="language-text"><code>UNSAFE_ENTRY(void, Unsafe_Unpark(JNIEnv *env, jobject unsafe, jobject jthread)) {
+  Parker* p = NULL;
+
+  if (jthread != NULL) {
+    ThreadsListHandle tlh;
+    JavaThread* thr = NULL;
+    oop java_thread = NULL;
+    (void) tlh.cv_internal_thread_to_JavaThread(jthread, &amp;thr, &amp;java_thread);
+    if (java_thread != NULL) {
+      // This is a valid oop.
+      jlong lp = java_lang_Thread::park_event(java_thread);
+      if (lp != 0) {
+        // This cast is OK even though the jlong might have been read
+        // non-atomically on 32bit systems, since there, one word will
+        // always be zero anyway and the value set is always the same
+        p = (Parker*)addr_from_java(lp);
+      } else {
+        // Not cached in the java.lang.Thread oop yet (could be an
+        // older version of library).
+        if (thr != NULL) {
+          // The JavaThread is alive.
+          p = thr-&gt;parker();
+          if (p != NULL) {
+            // Cache the Parker in the java.lang.Thread oop for next time.
+            java_lang_Thread::set_park_event(java_thread, addr_to_java(p));
+          }
+        }
+      }
+    }
+  } // ThreadsListHandle is destroyed here.
+
+  if (p != NULL) {
+    HOTSPOT_THREAD_UNPARK((uintptr_t) p);
+    p-&gt;unpark();
+  }
+} UNSAFE_END
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br></div></div><p>解析可以参考:https://blog.csdn.net/weixin_43767015/article/details/107207643</p> <h2 id="抽象同步队列-aqs-概述"><a href="#抽象同步队列-aqs-概述" class="header-anchor">#</a> 抽象同步队列 AQS 概述</h2> <h3 id="架构"><a href="#架构" class="header-anchor">#</a> 架构</h3> <h4 id="why"><a href="#why" class="header-anchor">#</a> why</h4> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * Provides a framework for implementing blocking locks and related
+ * synchronizers (semaphores, events, etc) that rely on
+ * first-in-first-out (FIFO) wait queues.  This class is designed to
+ * be a useful basis for most kinds of synchronizers that rely on a
+ * single atomic {@code int} value to represent state.
+ * This class provides an efficient and scalable basis for synchronization in part by specializing its range of          	* use to synchronizers that can rely on int state, acquire, and release parameters, and an internal FIFO wait    	* queue.
+ /
+</span></code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br></div></div><p>为了实现一个同步器的框架（模板，基石）。</p> <h4 id="what"><a href="#what" class="header-anchor">#</a> what</h4> <p>一个同步器框架。一个抽象同步器模板。依赖CLH队列和一个原子变量（volatile修饰）。</p> <h4 id="how"><a href="#how" class="header-anchor">#</a> how</h4> <p>如何实现呢？其实借鉴的是jvm底层加锁的一套机制。</p> <p>有同步队列（双向链表-&gt;内部类Node实现），ConditionObject（维护一个单向链表-&gt;等待队列），一个原子变量，LockSupport，CAS...</p> <p>具体变量参照下面类图</p> <h3 id="类图"><a href="#类图" class="header-anchor">#</a> 类图</h3> <p><img src="https://img-blog.csdnimg.cn/d0d6385bbc3f454ba95a51c5d6c049c1.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBASGlyZWVr,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p> <h3 id="node-同步队列的结构"><a href="#node-同步队列的结构" class="header-anchor">#</a> Node——同步队列的结构</h3> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">class</span> <span class="token class-name">Node</span> <span class="token punctuation">{</span>
+    <span class="token comment">/** Marker to indicate a node is waiting in shared mode */</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">Node</span> <span class="token constant">SHARED</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">/** Marker to indicate a node is waiting in exclusive mode */</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">Node</span> <span class="token constant">EXCLUSIVE</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/** waitStatus value to indicate thread has cancelled */</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">CANCELLED</span> <span class="token operator">=</span>  <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token comment">/** waitStatus value to indicate successor's thread needs unparking */</span>
+    <span class="token comment">/** 注意是下一个线程需要阻塞 */</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">SIGNAL</span>    <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token comment">/** waitStatus value to indicate thread is waiting on condition */</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">CONDITION</span> <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">2</span><span class="token punctuation">;</span>
+    <span class="token comment">/**
+     * waitStatus value to indicate the next acquireShared should
+     * unconditionally propagate
+     */</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">PROPAGATE</span> <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">3</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">volatile</span> <span class="token keyword">int</span> waitStatus<span class="token punctuation">;</span>
+
+    <span class="token keyword">volatile</span> <span class="token class-name">Node</span> prev<span class="token punctuation">;</span>
+
+    <span class="token keyword">volatile</span> <span class="token class-name">Node</span> next<span class="token punctuation">;</span>
+
+    <span class="token keyword">volatile</span> <span class="token class-name">Thread</span> thread<span class="token punctuation">;</span>
+
+    <span class="token class-name">Node</span> nextWaiter<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * Returns true if node is waiting in shared mode.
+     */</span>
+    <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">isShared</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> nextWaiter <span class="token operator">==</span> <span class="token constant">SHARED</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">/**
+     * Returns previous node, or throws NullPointerException if null.
+     * Use when predecessor cannot be null.  The null check could
+     * be elided, but is present to help the VM.
+     *
+     * @return the predecessor of this node
+     */</span>
+    <span class="token keyword">final</span> <span class="token class-name">Node</span> <span class="token function">predecessor</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">NullPointerException</span> <span class="token punctuation">{</span>
+        <span class="token class-name">Node</span> p <span class="token operator">=</span> prev<span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>p <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">NullPointerException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">else</span>
+            <span class="token keyword">return</span> p<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br><span class="line-number">42</span><br><span class="line-number">43</span><br><span class="line-number">44</span><br><span class="line-number">45</span><br><span class="line-number">46</span><br><span class="line-number">47</span><br><span class="line-number">48</span><br><span class="line-number">49</span><br><span class="line-number">50</span><br><span class="line-number">51</span><br><span class="line-number">52</span><br></div></div><h3 id="conditionobject-条件变量"><a href="#conditionobject-条件变量" class="header-anchor">#</a> ConditionObject——条件变量</h3> <p><strong>ConditionObject是条件变量，每个条件变量对应一个条件队列(单向链表队列)，其用来存放调用条件变量的await方法后被阻塞的线程。</strong></p> <p>类似wait()和notify()配合synchronized实现线程同步（通信）。区别是ConditionObject（条件变量）可以有多个，而synchronized只有一个共享变量。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ConditionObject</span> <span class="token keyword">implements</span> <span class="token class-name">Condition</span><span class="token punctuation">,</span> <span class="token class-name"><span class="token namespace">java<span class="token punctuation">.</span>io<span class="token punctuation">.</span></span>Serializable</span> <span class="token punctuation">{</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> serialVersionUID <span class="token operator">=</span> <span class="token number">1173984872572414699L</span><span class="token punctuation">;</span>
+    <span class="token comment">/** First node of condition queue. */</span>
+    <span class="token keyword">private</span> <span class="token keyword">transient</span> <span class="token class-name">Node</span> firstWaiter<span class="token punctuation">;</span>
+    <span class="token comment">/** Last node of condition queue. */</span>
+    <span class="token keyword">private</span> <span class="token keyword">transient</span> <span class="token class-name">Node</span> lastWaiter<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * Creates a new {@code ConditionObject} instance.
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">ConditionObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token punctuation">}</span>
+
+    <span class="token comment">// Internal methods</span>
+
+    <span class="token comment">/**
+     * Adds a new waiter to wait queue.
+     * @return its new wait node
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">Node</span> <span class="token function">addConditionWaiter</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">Node</span> t <span class="token operator">=</span> lastWaiter<span class="token punctuation">;</span>
+        <span class="token comment">// If lastWaiter is cancelled, clean out.</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>t <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> t<span class="token punctuation">.</span>waitStatus <span class="token operator">!=</span> <span class="token class-name">Node</span><span class="token punctuation">.</span><span class="token constant">CONDITION</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token function">unlinkCancelledWaiters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            t <span class="token operator">=</span> lastWaiter<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token class-name">Node</span> node <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token class-name">Node</span><span class="token punctuation">.</span><span class="token constant">CONDITION</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>t <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span>
+            firstWaiter <span class="token operator">=</span> node<span class="token punctuation">;</span>
+        <span class="token keyword">else</span>
+            t<span class="token punctuation">.</span>nextWaiter <span class="token operator">=</span> node<span class="token punctuation">;</span>
+        lastWaiter <span class="token operator">=</span> node<span class="token punctuation">;</span>
+        <span class="token keyword">return</span> node<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token comment">// ...</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br></div></div><h3 id="state-原子变量"><a href="#state-原子变量" class="header-anchor">#</a> state——原子变量</h3> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * The synchronization state.
+ */</span>
+<span class="token keyword">private</span> <span class="token keyword">volatile</span> <span class="token keyword">int</span> state<span class="token punctuation">;</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><p>在AQS中维持了一个单一的状态信息state，可以通过getState、setState、compareAndSetState函数修改其值。对于ReentrantLock的实现来说，state可以用来表示当前线程获取锁的可重入次数;对于读写锁ReentrantReadWriteLock来说，state的高16位表示读状态，也就是获取该读锁的次数，低16位表示获取到写锁的线程的可重入次数;对于semaphore来说，state用来表示当前可用信号的个数:对于CountDownlatch来说，state用来表示计数器当前的值。</p> <p>To use this class as the basis of a synchronizer, <strong>redefine the following methods</strong>, as applicable, by inspecting and/or modifying the synchronization state using getState, setState and/or compareAndSetState:</p> <ul><li>tryAcquire  // 独占锁</li> <li>tryRelease // 独占锁</li> <li>tryAcquireShared // 共享</li> <li>tryReleaseShared // 共享</li> <li>isHeldExclusively // 如果同步是独占的，则为true ； 否则为false</li></ul> <hr> <p><strong>下面讲讲独占和共享两种模式（不对中断响应）</strong></p> <h3 id="exclusive-mode"><a href="#exclusive-mode" class="header-anchor">#</a> exclusive mode</h3> <h4 id="acquire"><a href="#acquire" class="header-anchor">#</a> acquire</h4> <p>当一个线程调用 acquire(int arg)方法获取独占资源时，会首先使用 tryAcquire方 法尝试获取资源， 具体是设置状态变量 state 的值，成功则直接返回，失败则将当前线程 封装为类型为 Node.EXCLUSIVE 的 Node 节点后插入到 AQS 阻塞 队列的尾部，并调用 LockSupport.park(this) 方法挂起自己 。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * Acquires in exclusive mode, ignoring interrupts.  Implemented
+ * by invoking at least once {@link #tryAcquire},
+ * returning on success.  Otherwise the thread is queued, possibly
+ * repeatedly blocking and unblocking, invoking {@link
+ * #tryAcquire} until success.  This method can be used
+ * to implement method {@link Lock#lock}.
+ *
+ * @param arg the acquire argument.  This value is conveyed to
+ *        {@link #tryAcquire} but is otherwise uninterpreted and
+ *        can represent anything you like.
+ */</span>
+<span class="token annotation punctuation">@ReservedStackAccess</span>
+<span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">acquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">tryAcquire</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span>
+        <span class="token function">acquireQueued</span><span class="token punctuation">(</span><span class="token function">addWaiter</span><span class="token punctuation">(</span><span class="token class-name">Node</span><span class="token punctuation">.</span><span class="token constant">EXCLUSIVE</span><span class="token punctuation">)</span><span class="token punctuation">,</span> arg<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token function">selfInterrupt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br></div></div><h4 id="release"><a href="#release" class="header-anchor">#</a> release</h4> <p>当一个线程调用 release(int arg)方法时会尝试使用 tryRelease操作释放资源，这里 是设置状态变 量 state 的值，然后调用 LockSupport.unpark(thread)方法激活 AQS 队列 里 面 被阻塞的一个线程(thread)。 被激活的线程则使用 tryAcquire尝试，看当前状态变量 state 的值是否能满足自己的需要，满足则该线程被激活，然后继续 向下运行，否则还是会被放 入 AQS 队列并被挂起。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * Releases in exclusive mode.  Implemented by unblocking one or
+ * more threads if {@link #tryRelease} returns true.
+ * This method can be used to implement method {@link Lock#unlock}.
+ *
+ * @param arg the release argument.  This value is conveyed to
+ *        {@link #tryRelease} but is otherwise uninterpreted and
+ *        can represent anything you like.
+ * @return the value returned from {@link #tryRelease}
+ */</span>
+<span class="token annotation punctuation">@ReservedStackAccess</span>
+<span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">release</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">tryRelease</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">Node</span> h <span class="token operator">=</span> head<span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>h <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> h<span class="token punctuation">.</span>waitStatus <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span>
+            <span class="token function">unparkSuccessor</span><span class="token punctuation">(</span>h<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br></div></div><h3 id="shared-mode"><a href="#shared-mode" class="header-anchor">#</a> shared mode</h3> <h4 id="acquireshared"><a href="#acquireshared" class="header-anchor">#</a> acquireShared</h4> <p>当线程调用 acquireShared(intarg)获取共享资源时，会首先使用 trγAcq山reShared 尝试获取资源 ， 具体是设置状态变量 state 的 值，成功则 直接返 回，失败则将当前线 程 封 装为类型为 Node.SHARED 的 Node 节 点后插入 到 AQS 阻 塞 队列的尾部，并使用 LockSupport.park(this) 方法挂起自己。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * Acquires in shared mode, ignoring interrupts.  Implemented by
+ * first invoking at least once {@link #tryAcquireShared},
+ * returning on success.  Otherwise the thread is queued, possibly
+ * repeatedly blocking and unblocking, invoking {@link
+ * #tryAcquireShared} until success.
+ *
+ * @param arg the acquire argument.  This value is conveyed to
+ *        {@link #tryAcquireShared} but is otherwise uninterpreted
+ *        and can represent anything you like.
+ */</span>
+<span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">acquireShared</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">tryAcquireShared</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span> <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span>
+        <span class="token function">doAcquireShared</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br></div></div><h4 id="releaseshared"><a href="#releaseshared" class="header-anchor">#</a> releaseShared</h4> <p>当一个线程调用 releaseShared(int a电)时会尝试使用 tryReleaseShared 操作释放资 源，这里是设置状态变量 state 的值，然后使用 LockSupport.unpark (thread)激活 AQS 队 列里面被阻塞的一个线程 (thread)。被激活的线程则使用 tryReleaseShared查看当前状态变 量 state 的值是否能 满足自 己的 需要，满足 则 该线程被撤活，然后继续向下运行，否则还 是会被放入 AQS 队列并被挂起 。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * Releases in shared mode.  Implemented by unblocking one or more
+ * threads if {@link #tryReleaseShared} returns true.
+ *
+ * @param arg the release argument.  This value is conveyed to
+ *        {@link #tryReleaseShared} but is otherwise uninterpreted
+ *        and can represent anything you like.
+ * @return the value returned from {@link #tryReleaseShared}
+ */</span>
+<span class="token annotation punctuation">@ReservedStackAccess</span>
+<span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">releaseShared</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">tryReleaseShared</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token function">doReleaseShared</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br></div></div><p><strong>下面就来谈谈基于AQS具体的锁实现ReentrantLock</strong></p> <h2 id="reentrantlock"><a href="#reentrantlock" class="header-anchor">#</a> ReentrantLock</h2> <p>如果对AQS十分了解的话，就能快速了解ReentrantLock的思想。AQS独占模式一种具体实现。</p> <p>在看文档时，<strong>Serialization of this class behaves in the same way as built-in locks: a deserialized lock is in the unlocked state, regardless of its state when serialized.<strong>锁和</strong>序列化</strong>的关系，为什么ReentrantLock要实现序列化接口？还有AQS仅仅在https://stackoverflow.com/questions/17979009/why-locks-are-serializable-in-java找到了一点答案。之后在研究...</p> <h3 id="类图-2"><a href="#类图-2" class="header-anchor">#</a> 类图</h3> <p><img src="https://img-blog.csdnimg.cn/ffed078a324f46ac8b06366658330a10.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBASGlyZWVr,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/** Synchronizer providing all implementation mechanics */</span> 
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Sync</span> sync<span class="token punctuation">;</span> <span class="token comment">//</span>
+
+<span class="token comment">/**
+     * Base of synchronization control for this lock. Subclassed
+     * into fair and nonfair versions below. Uses AQS state to
+     * represent the number of holds on the lock.
+     */</span>
+<span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">Sync</span> <span class="token keyword">extends</span> <span class="token class-name">AbstractQueuedSynchronizer</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 默认nonfair</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><h3 id="nonfair-or-fair"><a href="#nonfair-or-fair" class="header-anchor">#</a> nonfair or fair</h3> <p>默认非公平锁。抢夺策略，新的线程可以直接抢占，可能不需要阻塞、排队、唤醒，也就减少了上下文的切换。吞吐量更高。</p> <h4 id="lock-对比"><a href="#lock-对比" class="header-anchor">#</a> lock()对比</h4> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * nonfair
+ * Performs lock.  Try immediate barge, backing up to normal 立即进行cas抢占锁，否则正常流程
+ * acquire on failure.
+ */</span>
+<span class="token annotation punctuation">@ReservedStackAccess</span> <span class="token comment">// This lock supports a maximum of 2147483647 recursive locks by the same thread. 增加额外堆栈空间,但也有可能延迟抛出StackOverflowError</span>
+<span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">compareAndSetState</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token function">setExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">else</span>
+    <span class="token function">acquire</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/**
+ * fair 正常流程
+ */</span>
+<span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token function">acquire</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br></div></div><h4 id="tryacquire-int-acquires-对比"><a href="#tryacquire-int-acquires-对比" class="header-anchor">#</a> tryAcquire(int acquires)对比</h4> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * nonfair
+ * Performs non-fair tryLock.  tryAcquire is implemented in
+ * subclasses, but both need nonfair try for trylock method.
+ */</span>
+<span class="token annotation punctuation">@ReservedStackAccess</span>
+<span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">nonfairTryAcquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> acquires<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">final</span> <span class="token class-name">Thread</span> current <span class="token operator">=</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">int</span> c <span class="token operator">=</span> <span class="token function">getState</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>c <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">compareAndSetState</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> acquires<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// 直接尝试cas</span>
+      <span class="token function">setExclusiveOwnerThread</span><span class="token punctuation">(</span>current<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>current <span class="token operator">==</span> <span class="token function">getExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// 当前线程和当前已获得锁的线程是同一个 可重入</span>
+    <span class="token keyword">int</span> nextc <span class="token operator">=</span> c <span class="token operator">+</span> acquires<span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>nextc <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token comment">// overflow</span>
+      <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">Error</span><span class="token punctuation">(</span><span class="token string">&quot;Maximum lock count exceeded&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">setState</span><span class="token punctuation">(</span>nextc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment">/**
+ * Fair version of tryAcquire.  Don't grant access unless
+ * recursive call or no waiters or is first.
+ */</span>
+<span class="token annotation punctuation">@ReservedStackAccess</span>
+<span class="token keyword">protected</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">tryAcquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> acquires<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">final</span> <span class="token class-name">Thread</span> current <span class="token operator">=</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">int</span> c <span class="token operator">=</span> <span class="token function">getState</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>c <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">hasQueuedPredecessors</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span>  <span class="token comment">// no waiters or is first才会尝试cas</span>
+        <span class="token function">compareAndSetState</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> acquires<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> 
+      <span class="token function">setExclusiveOwnerThread</span><span class="token punctuation">(</span>current<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>current <span class="token operator">==</span> <span class="token function">getExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">int</span> nextc <span class="token operator">=</span> c <span class="token operator">+</span> acquires<span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>nextc <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span>
+      <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">Error</span><span class="token punctuation">(</span><span class="token string">&quot;Maximum lock count exceeded&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">setState</span><span class="token punctuation">(</span>nextc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br><span class="line-number">42</span><br><span class="line-number">43</span><br><span class="line-number">44</span><br><span class="line-number">45</span><br><span class="line-number">46</span><br><span class="line-number">47</span><br><span class="line-number">48</span><br><span class="line-number">49</span><br></div></div><h2 id="reentrantreadwritelock"><a href="#reentrantreadwritelock" class="header-anchor">#</a> ReentrantReadWritelock</h2> <p>解决线程安全问题使用ReentrantLock就可以，但是ReentrantLock是独占锁，某时只有一个线程可以获取该锁，而实际中会有<strong>写少读多</strong>的场景，显然ReentrantLock满足不了这个需求，所以ReentrantReadWriteLock应运而生。ReentrantReadWriteLock采用<strong>读写分离</strong>的策略，允许多个线程可以同时获取读锁**。AQS的独占和共享模式结合使用**。支持锁降级（写锁降级到读锁，不支持升级）。</p> <h3 id="state状态"><a href="#state状态" class="header-anchor">#</a> state状态</h3> <p>之前讲AQS也提过。用state的高16位表示读状态，也就是获取到读锁的次数;使用低16位表示获取到写锁的线程的可重入次数。</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/*
+ * Read vs write count extraction constants and functions.
+ * Lock state is logically divided into two unsigned shorts:
+ * The lower one representing the exclusive (writer) lock hold count,
+ * and the upper the shared (reader) hold count.
+ */</span>
+
+<span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">SHARED_SHIFT</span>   <span class="token operator">=</span> <span class="token number">16</span><span class="token punctuation">;</span>
+<span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">SHARED_UNIT</span>    <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">&lt;&lt;</span> <span class="token constant">SHARED_SHIFT</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">MAX_COUNT</span>      <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">&lt;&lt;</span> <span class="token constant">SHARED_SHIFT</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span>
+<span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">EXCLUSIVE_MASK</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">&lt;&lt;</span> <span class="token constant">SHARED_SHIFT</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span>
+
+<span class="token comment">/** Returns the number of shared holds represented in count  */</span>
+<span class="token keyword">static</span> <span class="token keyword">int</span> <span class="token function">sharedCount</span><span class="token punctuation">(</span><span class="token keyword">int</span> c<span class="token punctuation">)</span>    <span class="token punctuation">{</span> <span class="token keyword">return</span> c <span class="token operator">&gt;&gt;&gt;</span> <span class="token constant">SHARED_SHIFT</span><span class="token punctuation">;</span> <span class="token punctuation">}</span>
+<span class="token comment">/** Returns the number of exclusive holds represented in count  */</span>
+<span class="token keyword">static</span> <span class="token keyword">int</span> <span class="token function">exclusiveCount</span><span class="token punctuation">(</span><span class="token keyword">int</span> c<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">return</span> c <span class="token operator">&amp;</span> <span class="token constant">EXCLUSIVE_MASK</span><span class="token punctuation">;</span> <span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br></div></div><h3 id="nonfair-or-fair-2"><a href="#nonfair-or-fair-2" class="header-anchor">#</a> nonfair or fair</h3> <p>在这两个方法的区分是否公平</p> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token comment">/**
+ * Returns true if the current thread, when trying to acquire
+ * the read lock, and otherwise eligible to do so, should block
+ * because of policy for overtaking other waiting threads.
+ */</span>
+<span class="token keyword">abstract</span> <span class="token keyword">boolean</span> <span class="token function">readerShouldBlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token comment">/**
+ * Returns true if the current thread, when trying to acquire
+ * the write lock, and otherwise eligible to do so, should block
+ * because of policy for overtaking other waiting threads.
+ */</span>
+<span class="token keyword">abstract</span> <span class="token keyword">boolean</span> <span class="token function">writerShouldBlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br></div></div><h3 id="写锁的获取"><a href="#写锁的获取" class="header-anchor">#</a> 写锁的获取</h3> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">protected</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">tryAcquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> acquires<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">/*
+     * Walkthrough:
+     * 1. If read count nonzero or write count nonzero
+     *    and owner is a different thread, fail.
+     * 2. If count would saturate, fail. (This can only
+     *    happen if count is already nonzero.)
+     * 3. Otherwise, this thread is eligible for lock if
+     *    it is either a reentrant acquire or
+     *    queue policy allows it. If so, update state
+     *    and set owner.
+     */</span>
+    <span class="token class-name">Thread</span> current <span class="token operator">=</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> c <span class="token operator">=</span> <span class="token function">getState</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+    <span class="token keyword">int</span> w <span class="token operator">=</span> <span class="token function">exclusiveCount</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 获取写锁可重入次数</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>c <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// 有锁</span>
+        <span class="token comment">// (Note: if c != 0 and w == 0 then shared count != 0)</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>w <span class="token operator">==</span> <span class="token number">0</span> <span class="token operator">||</span> current <span class="token operator">!=</span> <span class="token function">getExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// 读锁或当前线程是不是该写锁的持有者</span>
+            <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>w <span class="token operator">+</span> <span class="token function">exclusiveCount</span><span class="token punctuation">(</span>acquires<span class="token punctuation">)</span> <span class="token operator">&gt;</span> <span class="token constant">MAX_COUNT</span><span class="token punctuation">)</span> <span class="token comment">// 判断边界</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">Error</span><span class="token punctuation">(</span><span class="token string">&quot;Maximum lock count exceeded&quot;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// Reentrant acquire</span>
+        <span class="token function">setState</span><span class="token punctuation">(</span>c <span class="token operator">+</span> acquires<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">writerShouldBlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token comment">// 非公平 writerShouldBlock false,公平 判断当前线程节点是否有前驱节点</span>
+        <span class="token operator">!</span><span class="token function">compareAndSetState</span><span class="token punctuation">(</span>c<span class="token punctuation">,</span> c <span class="token operator">+</span> acquires<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token function">setExclusiveOwnerThread</span><span class="token punctuation">(</span>current<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br></div></div><h3 id="读锁获取"><a href="#读锁获取" class="header-anchor">#</a> 读锁获取</h3> <div class="language-java line-numbers-mode"><pre class="language-java"><code><span class="token keyword">protected</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token function">tryAcquireShared</span><span class="token punctuation">(</span><span class="token keyword">int</span> unused<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">/*
+     * Walkthrough:
+     * 1. If write lock held by another thread, fail.
+     * 2. Otherwise, this thread is eligible for
+     *    lock wrt state, so ask if it should block
+     *    because of queue policy. If not, try
+     *    to grant by CASing state and updating count.
+     *    Note that step does not check for reentrant
+     *    acquires, which is postponed to full version
+     *    to avoid having to check hold count in
+     *    the more typical non-reentrant case.
+     * 3. If step 2 fails either because thread
+     *    apparently not eligible or CAS fails or count
+     *    saturated, chain to version with full retry loop.
+     */</span>
+    <span class="token class-name">Thread</span> current <span class="token operator">=</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> c <span class="token operator">=</span> <span class="token function">getState</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">exclusiveCount</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">0</span> <span class="token operator">&amp;&amp;</span>
+        <span class="token function">getExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> current<span class="token punctuation">)</span>
+        <span class="token keyword">return</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> r <span class="token operator">=</span> <span class="token function">sharedCount</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">readerShouldBlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span>
+        r <span class="token operator">&lt;</span> <span class="token constant">MAX_COUNT</span> <span class="token operator">&amp;&amp;</span>
+        <span class="token function">compareAndSetState</span><span class="token punctuation">(</span>c<span class="token punctuation">,</span> c <span class="token operator">+</span> <span class="token constant">SHARED_UNIT</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// 重入次数记录</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>r <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            firstReader <span class="token operator">=</span> current<span class="token punctuation">;</span>
+            firstReaderHoldCount <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>firstReader <span class="token operator">==</span> current<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            firstReaderHoldCount<span class="token operator">++</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+            <span class="token class-name">HoldCounter</span> rh <span class="token operator">=</span> cachedHoldCounter<span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>rh <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> rh<span class="token punctuation">.</span>tid <span class="token operator">!=</span> <span class="token function">getThreadId</span><span class="token punctuation">(</span>current<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                cachedHoldCounter <span class="token operator">=</span> rh <span class="token operator">=</span> readHolds<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>rh<span class="token punctuation">.</span>count <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span>
+                readHolds<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>rh<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            rh<span class="token punctuation">.</span>count<span class="token operator">++</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  	<span class="token comment">// 重试</span>
+    <span class="token keyword">return</span> <span class="token function">fullTryAcquireShared</span><span class="token punctuation">(</span>current<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br><span class="line-number">42</span><br><span class="line-number">43</span><br><span class="line-number">44</span><br></div></div><h2 id="stampedlock"><a href="#stampedlock" class="header-anchor">#</a> StampedLock</h2> <p>未完待遇...</p> <p>2022年愿你成为光！</p></div></section> <footer class="page-edit"><!----> <!----></footer> <div class="page-nav"><p class="inner"><span class="prev"><a href="/blogs/书/Java并发编程之美/Java并发包中并发List（CopyOnWriteArrayList）源码剖析.html" class="prev">
+          Java并发包中并发List（CopyOnWriteArrayList）源码剖析
+        </a></span> <span class="next"><a href="/blogs/书/Java并发编程之美/Java并发包中线程池ThreadPoolExecutor原理探究.html">
+          Java并发包中线程池ThreadPoolExecutor原理探究
+        </a></span></p></div> <div class="comments-wrapper"><!----></div></main></div> <!----></div> <ul class="sub-sidebar sub-sidebar-wrapper" style="width:12rem;" data-v-b57cc07c data-v-7dd95ae2><li class="level-2" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#locksupport-工具类" class="sidebar-link reco-side-locksupport-工具类" data-v-b57cc07c>LockSupport 工具类</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#void-park" class="sidebar-link reco-side-void-park" data-v-b57cc07c>void park()</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#void-unpark-thread-thread-方法" class="sidebar-link reco-side-void-unpark-thread-thread-方法" data-v-b57cc07c>void unpark(Thread thread) 方法</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#void-parknanos-long-nanos-方法" class="sidebar-link reco-side-void-parknanos-long-nanos-方法" data-v-b57cc07c>void parkNanos(long nanos) 方法</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#void-park-object-blocker" class="sidebar-link reco-side-void-park-object-blocker" data-v-b57cc07c>void park(Object blocker)</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#void-parknanos-object-blocker-long-nanos" class="sidebar-link reco-side-void-parknanos-object-blocker-long-nanos" data-v-b57cc07c>void parkNanos(Object blocker, long nanos)</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#void-parkutil-object-blocker-long-deadline" class="sidebar-link reco-side-void-parkutil-object-blocker-long-deadline" data-v-b57cc07c>void parkUtil(Object blocker, long deadline)</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#最后再看一个例子" class="sidebar-link reco-side-最后再看一个例子" data-v-b57cc07c>最后再看一个例子</a></li><li class="level-2" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#hotspot底层实现" class="sidebar-link reco-side-hotspot底层实现" data-v-b57cc07c>hotspot底层实现</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#unsafe-park" class="sidebar-link reco-side-unsafe-park" data-v-b57cc07c>Unsafe_Park</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#unsafe-unpark" class="sidebar-link reco-side-unsafe-unpark" data-v-b57cc07c>Unsafe_Unpark</a></li><li class="level-2" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#抽象同步队列-aqs-概述" class="sidebar-link reco-side-抽象同步队列-aqs-概述" data-v-b57cc07c>抽象同步队列 AQS 概述</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#架构" class="sidebar-link reco-side-架构" data-v-b57cc07c>架构</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#类图" class="sidebar-link reco-side-类图" data-v-b57cc07c>类图</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#node-同步队列的结构" class="sidebar-link reco-side-node-同步队列的结构" data-v-b57cc07c>Node——同步队列的结构</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#conditionobject-条件变量" class="sidebar-link reco-side-conditionobject-条件变量" data-v-b57cc07c>ConditionObject——条件变量</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#state-原子变量" class="sidebar-link reco-side-state-原子变量" data-v-b57cc07c>state——原子变量</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#exclusive-mode" class="sidebar-link reco-side-exclusive-mode" data-v-b57cc07c>exclusive mode</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#shared-mode" class="sidebar-link reco-side-shared-mode" data-v-b57cc07c>shared mode</a></li><li class="level-2" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#reentrantlock" class="sidebar-link reco-side-reentrantlock" data-v-b57cc07c>ReentrantLock</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#类图-2" class="sidebar-link reco-side-类图-2" data-v-b57cc07c>类图</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#nonfair-or-fair" class="sidebar-link reco-side-nonfair-or-fair" data-v-b57cc07c>nonfair or fair</a></li><li class="level-2" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#reentrantreadwritelock" class="sidebar-link reco-side-reentrantreadwritelock" data-v-b57cc07c>ReentrantReadWritelock</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#state状态" class="sidebar-link reco-side-state状态" data-v-b57cc07c>state状态</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#nonfair-or-fair-2" class="sidebar-link reco-side-nonfair-or-fair-2" data-v-b57cc07c>nonfair or fair</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#写锁的获取" class="sidebar-link reco-side-写锁的获取" data-v-b57cc07c>写锁的获取</a></li><li class="level-3" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#读锁获取" class="sidebar-link reco-side-读锁获取" data-v-b57cc07c>读锁获取</a></li><li class="level-2" data-v-b57cc07c><a href="/blogs/%E4%B9%A6/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%B9%8B%E7%BE%8E/Java%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E9%94%81%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90.html#stampedlock" class="sidebar-link reco-side-stampedlock" data-v-b57cc07c>StampedLock</a></li></ul></div></div></div><div class="global-ui"><div class="back-to-ceiling" style="right:1rem;bottom:6rem;width:2.5rem;height:2.5rem;border-radius:.25rem;line-height:2.5rem;display:none;" data-v-c6073ba8 data-v-c6073ba8><svg t="1574745035067" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5404" class="icon" data-v-c6073ba8><path d="M526.60727968 10.90185116a27.675 27.675 0 0 0-29.21455937 0c-131.36607665 82.28402758-218.69155461 228.01873535-218.69155402 394.07834331a462.20625001 462.20625001 0 0 0 5.36959153 69.94390903c1.00431239 6.55289093-0.34802892 13.13561351-3.76865779 18.80351572-32.63518765 54.11355614-51.75690182 118.55860487-51.7569018 187.94566865a371.06718723 371.06718723 0 0 0 11.50484808 91.98906777c6.53300375 25.50556257 41.68394495 28.14064038 52.69160883 4.22606766 17.37162448-37.73630017 42.14135425-72.50938081 72.80769204-103.21549295 2.18761121 3.04276886 4.15646224 6.24463696 6.40373557 9.22774369a1871.4375 1871.4375 0 0 0 140.04691725 5.34970492 1866.36093723 1866.36093723 0 0 0 140.04691723-5.34970492c2.24727335-2.98310674 4.21612437-6.18497483 6.3937923-9.2178004 30.66633723 30.70611158 55.4360664 65.4791928 72.80769147 103.21549355 11.00766384 23.91457269 46.15860503 21.27949489 52.69160879-4.22606768a371.15156223 371.15156223 0 0 0 11.514792-91.99901164c0-69.36717486-19.13165746-133.82216804-51.75690182-187.92578088-3.42062944-5.66790279-4.76302748-12.26056868-3.76865837-18.80351632a462.20625001 462.20625001 0 0 0 5.36959269-69.943909c-0.00994388-166.08943902-87.32547796-311.81420293-218.6915546-394.09823051zM605.93803103 357.87693858a93.93749974 93.93749974 0 1 1-187.89594924 6.1e-7 93.93749974 93.93749974 0 0 1 187.89594924-6.1e-7z" p-id="5405" data-v-c6073ba8></path><path d="M429.50777625 765.63860547C429.50777625 803.39355007 466.44236686 1000.39046097 512.00932183 1000.39046097c45.56695499 0 82.4922232-197.00623328 82.5015456-234.7518555 0-37.75494459-36.9345906-68.35043303-82.4922232-68.34111062-45.57627738-0.00932239-82.52019037 30.59548842-82.51086798 68.34111062z" p-id="5406" data-v-c6073ba8></path></svg></div></div></div>
+    <script src="/assets/js/app.e4232f48.js" defer></script><script src="/assets/js/3.f4a9627b.js" defer></script><script src="/assets/js/1.0b3a1078.js" defer></script><script src="/assets/js/16.5fe0e3ac.js" defer></script>
+  </body>
+</html>
