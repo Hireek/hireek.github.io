@@ -1,1 +1,0 @@
-import{_ as e,c as t,o as a}from"./app-B4ALHgv8.js";const n={};function c(o,r){return a(),t("div")}const s=e(n,[["render",c]]),l=JSON.parse('{"path":"/categories/Javabingfabianchengzhimei/1.html","title":"","lang":"en-US","frontmatter":{"layout":"Categories"},"headers":[],"git":{},"filePathRelative":null}');export{s as comp,l as data};
